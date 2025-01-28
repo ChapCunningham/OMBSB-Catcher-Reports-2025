@@ -1,7 +1,7 @@
+import streamlit as st
 import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
-import streamlit as st
 
 # Define constants
 rulebook_left = -0.83083
@@ -27,30 +27,30 @@ y_splits = np.linspace(rulebook_bottom, rulebook_top, 4)
 
 # Define shadow zone boundaries
 shadow_zones = {
-    "10": [(expanded_left, rulebook_left), (strike_zone_middle_y, rulebook_top)],
-    "11": [(rulebook_right, expanded_right), (strike_zone_middle_y, rulebook_top)],
-    "12": [(expanded_left, rulebook_left), (expanded_bottom, strike_zone_middle_y)],
-    "13": [(rulebook_right, expanded_right), (expanded_bottom, strike_zone_middle_y)]
+    "10": [(expanded_left, rulebook_left), (strike_zone_middle_y, rulebook_top)],  # Upper Left Shadow
+    "11": [(rulebook_right, expanded_right), (strike_zone_middle_y, rulebook_top)],  # Upper Right Shadow
+    "12": [(expanded_left, rulebook_left), (expanded_bottom, strike_zone_middle_y)],  # Lower Left Shadow
+    "13": [(rulebook_right, expanded_right), (expanded_bottom, strike_zone_middle_y)]  # Lower Right Shadow
 }
 
-# Define the file paths
+# Define file paths
 sec_csv_path = "SEC_Pitching_pbp_cleaned_for_catchers.csv"
 fawley_csv_path = "Spring Intrasquads MASTER.csv"
 
 # Load datasets with only necessary columns
-columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows', 'Catcher', 'PitchCall', 
-                  'TaggedPitchType', 'PlateLocSide', 'PlateLocHeight', 'Date']
+columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows', 'Catcher', 
+                  'PitchCall', 'TaggedPitchType', 'PlateLocSide', 'PlateLocHeight', 'Date']
 df_sec = pd.read_csv(sec_csv_path, usecols=columns_needed)
 df_fawley = pd.read_csv(fawley_csv_path, usecols=columns_needed)
 
-# Convert Date column to datetime format
+# Convert Date column to datetime
 df_sec['Date'] = pd.to_datetime(df_sec['Date'])
 df_fawley['Date'] = pd.to_datetime(df_fawley['Date'])
 
 # Streamlit App Title
 st.title("Strike Zone Comparison: Catcher vs SEC")
 
-# Sidebar for selecting Catcher and Date Range
+# Sidebar for Catcher and Date Range selection
 catcher_list = ['All'] + sorted(df_fawley['Catcher'].unique().tolist())
 selected_catcher = st.sidebar.selectbox("Select Catcher", catcher_list, index=0)
 
@@ -97,32 +97,38 @@ def calculate_strike_ratios(df):
 sec_strike_ratios = calculate_strike_ratios(df_sec)
 fawley_strike_ratios = calculate_strike_ratios(df_fawley)
 
-# Create a two-plot figure
-fig, axs = plt.subplots(1, 2, figsize=(14, 7))
+# Create the plot
+fig, ax = plt.subplots(figsize=(8, 8))
+ax.set_xlim(-3, 3)
+ax.set_ylim(0, 5)
 
-for ax in axs:
-    ax.set_xlim(-3, 3)
-    ax.set_ylim(0, 5)
-    ax.set_xticks([])
-    ax.set_yticks([])
+# Draw original strike zone and shadow zone structure
+dx = (rulebook_right - rulebook_left) / 3
+dy = (rulebook_top - rulebook_bottom) / 3
+for i in range(4):
+    ax.plot([rulebook_left + i*dx, rulebook_left + i*dx], [rulebook_bottom, rulebook_top], 'k-', linewidth=1)
+    ax.plot([rulebook_left, rulebook_right], [rulebook_bottom + i*dy, rulebook_bottom + i*dy], 'k-', linewidth=1)
 
-# Function to draw the strike zone and shadow zones
-def draw_strike_zone(ax):
-    for x in x_splits:
-        ax.plot([x, x], [rulebook_bottom, rulebook_top], 'k-', linewidth=1)
-    for y in y_splits:
-        ax.plot([rulebook_left, rulebook_right], [y, y], 'k-', linewidth=1)
-    for _, ((x_min, x_max), (y_min, y_max)) in shadow_zones.items():
-        ax.plot([x_min, x_max], [y_max, y_max], 'b--', linewidth=1)
-        ax.plot([x_max, x_max], [y_min, y_max], 'b--', linewidth=1)
+# Draw expanded strike zone
+ax.plot([expanded_left, expanded_right], [expanded_bottom, expanded_bottom], 'b--', linewidth=2)
+ax.plot([expanded_left, expanded_right], [expanded_top, expanded_top], 'b--', linewidth=2)
+ax.plot([expanded_left, expanded_left], [expanded_bottom, expanded_top], 'b--', linewidth=2)
+ax.plot([expanded_right, expanded_right], [expanded_bottom, expanded_top], 'b--', linewidth=2)
 
-# Left Plot - Strike Zone with Percentages
-axs[0].set_title(f"{selected_catcher} Strike Zone Reports")
-draw_strike_zone(axs[0])
+# Draw shadow zone splits for the left side
+ax.plot([expanded_left, rulebook_left], [strike_zone_middle_y, strike_zone_middle_y], 'b--', linewidth=1)
+ax.plot([strike_zone_middle_x, strike_zone_middle_x], [expanded_bottom, rulebook_bottom], 'b--', linewidth=1)
+
+# Label strike ratios
 for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
     text_x = (x_min + x_max) / 2
     text_y = (y_min + y_max) / 2
-    axs[0].text(text_x, text_y, f"{fawley_strike_ratios[zone]:.2f}", ha='center', va='center', fontsize=12, color='red')
+    ax.text(text_x, text_y, f"{fawley_strike_ratios[zone]:.2f}", ha='center', va='center', fontsize=12, color='red')
 
-# Show the plot in Streamlit
+# Customize plot
+ax.set_title("Optimized Strike Zone with Left Zone Fix")
+ax.set_xlabel("Horizontal Location (PlateLocSide)")
+ax.set_ylabel("Vertical Location (PlateLocHeight)")
+
+# Display the plot in Streamlit
 st.pyplot(fig)
