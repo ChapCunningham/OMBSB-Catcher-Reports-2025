@@ -100,7 +100,7 @@ fawley_strike_ratios = calculate_strike_ratios(df_fawley)
 # Create a two-plot figure
 fig, axs = plt.subplots(1, 2, figsize=(14, 7))
 
-# Draw strike zone plot (left)
+# Left Plot - Strike Zone
 axs[0].set_xlim(-3, 3)
 axs[0].set_ylim(0, 5)
 axs[0].set_xticks([])
@@ -119,32 +119,34 @@ axs[0].plot([expanded_left, expanded_right], [expanded_top, expanded_top], 'b--'
 axs[0].plot([expanded_left, expanded_left], [expanded_bottom, expanded_top], 'b--', linewidth=2)
 axs[0].plot([expanded_right, expanded_right], [expanded_bottom, expanded_top], 'b--', linewidth=2)
 
-# Plot the scatter plot (right)
+# Label strike ratios
+for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
+    text_x = (x_min + x_max) / 2
+    text_y = (y_min + y_max) / 2
+    axs[0].text(text_x, text_y, f"{fawley_strike_ratios[zone]:.2f}", ha='center', va='center', fontsize=12, color='red')
+
+# Right Plot - Pitch Scatter Plot
 axs[1].set_xlim(-3, 3)
 axs[1].set_ylim(0, 5)
 axs[1].set_xticks([])
 axs[1].set_yticks([])
-axs[1].set_title(f"Pitch Call Breakdown")
+axs[1].set_title("Pitch Call Breakdown")
 
-for index, row in df_fawley.iterrows():
+for _, row in df_fawley.iterrows():
     x, y = row['PlateLocSide'], row['PlateLocHeight']
     pitch_call = row['PitchCall']
     
     inside_zone = any((x_min <= x <= x_max and y_min <= y <= y_max) for (x_min, x_max), (y_min, y_max) in zones.values())
 
     if pitch_call == "StrikeCalled":
-        if inside_zone:
-            axs[1].scatter(x, y, color='green', marker='o', label="StrikeCalled")
-        else:
-            axs[1].scatter(x, y, color='green', marker='s', label="StrikeGained")
+        marker = 'o' if inside_zone else 's'
+        axs[1].scatter(x, y, color='green', marker=marker)
     else:
-        if inside_zone:
-            axs[1].scatter(x, y, color='red', marker='s', label="StrikeLost")
-        else:
-            axs[1].scatter(x, y, color='red', marker='o', label="BallCalled")
+        marker = 's' if inside_zone else 'o'
+        axs[1].scatter(x, y, color='red', marker=marker)
 
-# Add legend
-axs[1].legend(["StrikeCalled", "StrikeLost", "StrikeGained", "BallCalled"])
+# Add Legend
+axs[1].legend(["StrikeCalled (Green Circle)", "StrikeLost (Red Square)", "StrikeGained (Green Square)", "BallCalled (Red Circle)"])
 
 # Display in Streamlit
 st.pyplot(fig)
