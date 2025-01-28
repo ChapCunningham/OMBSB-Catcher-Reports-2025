@@ -112,10 +112,9 @@ def draw_strike_zone(ax):
         ax.plot([x, x], [rulebook_bottom, rulebook_top], 'k-', linewidth=1)
     for y in y_splits:
         ax.plot([rulebook_left, rulebook_right], [y, y], 'k-', linewidth=1)
-    ax.plot([expanded_left, expanded_right], [expanded_bottom, expanded_bottom], 'b--', linewidth=2)
-    ax.plot([expanded_left, expanded_right], [expanded_top, expanded_top], 'b--', linewidth=2)
-    ax.plot([expanded_left, expanded_left], [expanded_bottom, expanded_top], 'b--', linewidth=2)
-    ax.plot([expanded_right, expanded_right], [expanded_bottom, expanded_top], 'b--', linewidth=2)
+    for _, ((x_min, x_max), (y_min, y_max)) in shadow_zones.items():
+        ax.plot([x_min, x_max], [y_max, y_max], 'b--', linewidth=1)
+        ax.plot([x_max, x_max], [y_min, y_max], 'b--', linewidth=1)
 
 # Left Plot - Strike Zone with Percentages
 axs[0].set_title(f"{selected_catcher} Strike Zone Reports")
@@ -124,16 +123,6 @@ for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
     text_x = (x_min + x_max) / 2
     text_y = (y_min + y_max) / 2
     axs[0].text(text_x, text_y, f"{fawley_strike_ratios[zone]:.2f}", ha='center', va='center', fontsize=12, color='red')
-
-# Right Plot - Pitch Scatter Plot + Zone
-axs[1].set_title("Pitch Call Breakdown")
-draw_strike_zone(axs[1])
-for _, row in df_fawley.iterrows():
-    x, y = row['PlateLocSide'], row['PlateLocHeight']
-    pitch_call = row['PitchCall']
-    inside_zone = any((x_min <= x <= x_max and y_min <= y <= y_max) for (x_min, x_max), (y_min, y_max) in zones.values())
-    color, marker = ('green', 'o') if pitch_call == "StrikeCalled" else ('red', 's')
-    axs[1].scatter(x, y, color=color, marker=marker)
 
 # Show the plot in Streamlit
 st.pyplot(fig)
