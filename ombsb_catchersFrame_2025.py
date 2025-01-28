@@ -27,10 +27,10 @@ y_splits = np.linspace(rulebook_bottom, rulebook_top, 4)
 
 # Define shadow zone boundaries
 shadow_zones = {
-    "10": [(expanded_left, rulebook_left), (strike_zone_middle_y, rulebook_top)],  # Upper Left Shadow
-    "11": [(rulebook_right, expanded_right), (strike_zone_middle_y, rulebook_top)],  # Upper Right Shadow
-    "12": [(expanded_left, rulebook_left), (expanded_bottom, strike_zone_middle_y)],  # Lower Left Shadow
-    "13": [(rulebook_right, expanded_right), (expanded_bottom, strike_zone_middle_y)]  # Lower Right Shadow
+    "10": [(expanded_left, rulebook_left), (strike_zone_middle_y, rulebook_top)],
+    "11": [(rulebook_right, expanded_right), (strike_zone_middle_y, rulebook_top)],
+    "12": [(expanded_left, rulebook_left), (expanded_bottom, strike_zone_middle_y)],
+    "13": [(rulebook_right, expanded_right), (expanded_bottom, strike_zone_middle_y)]
 }
 
 # Define the file paths
@@ -97,45 +97,54 @@ def calculate_strike_ratios(df):
 sec_strike_ratios = calculate_strike_ratios(df_sec)
 fawley_strike_ratios = calculate_strike_ratios(df_fawley)
 
-# Determine title dynamically
-if date_selection == "Single Date":
-    title = f"{selected_catcher} Report for {selected_date}"
-elif date_selection == "Date Range" and len(date_range) == 2:
-    title = f"{selected_catcher} Reports for {date_range[0]} to {date_range[1]}"
-else:
-    title = f"{selected_catcher} Reports for All Dates"
+# Create a two-plot figure
+fig, axs = plt.subplots(1, 2, figsize=(14, 7))
 
-# Plot the strike zone and expanded strike zone
-fig, ax = plt.subplots(figsize=(8, 8))
-ax.set_xlim(-3, 3)
-ax.set_ylim(0, 5)
-ax.set_xticks([])
-ax.set_yticks([])
-ax.set_title(title)
+# Draw strike zone plot (left)
+axs[0].set_xlim(-3, 3)
+axs[0].set_ylim(0, 5)
+axs[0].set_xticks([])
+axs[0].set_yticks([])
+axs[0].set_title(f"{selected_catcher} Strike Zone Reports")
 
-# Draw original strike zone and shadow zone structure
+# Draw structured zones
 for x in x_splits:
-    ax.plot([x, x], [rulebook_bottom, rulebook_top], 'k-', linewidth=1)
+    axs[0].plot([x, x], [rulebook_bottom, rulebook_top], 'k-', linewidth=1)
 for y in y_splits:
-    ax.plot([rulebook_left, rulebook_right], [y, y], 'k-', linewidth=1)
+    axs[0].plot([rulebook_left, rulebook_right], [y, y], 'k-', linewidth=1)
 
-# Draw expanded strike zone
-ax.plot([expanded_left, expanded_right], [expanded_bottom, expanded_bottom], 'b--', linewidth=2)
-ax.plot([expanded_left, expanded_right], [expanded_top, expanded_top], 'b--', linewidth=2)
-ax.plot([expanded_left, expanded_left], [expanded_bottom, expanded_top], 'b--', linewidth=2)
-ax.plot([expanded_right, expanded_right], [expanded_bottom, expanded_top], 'b--', linewidth=2)
+# Draw shadow zones
+axs[0].plot([expanded_left, expanded_right], [expanded_bottom, expanded_bottom], 'b--', linewidth=2)
+axs[0].plot([expanded_left, expanded_right], [expanded_top, expanded_top], 'b--', linewidth=2)
+axs[0].plot([expanded_left, expanded_left], [expanded_bottom, expanded_top], 'b--', linewidth=2)
+axs[0].plot([expanded_right, expanded_right], [expanded_bottom, expanded_top], 'b--', linewidth=2)
 
-# Draw shadow zone splits
-ax.plot([expanded_left, rulebook_left], [strike_zone_middle_y, strike_zone_middle_y], 'b--', linewidth=1)
-ax.plot([expanded_right, rulebook_right], [strike_zone_middle_y, strike_zone_middle_y], 'b--', linewidth=1)
-ax.plot([strike_zone_middle_x, strike_zone_middle_x], [expanded_bottom, rulebook_bottom], 'b--', linewidth=1)
-ax.plot([strike_zone_middle_x, strike_zone_middle_x], [rulebook_top, expanded_top], 'b--', linewidth=1)
+# Plot the scatter plot (right)
+axs[1].set_xlim(-3, 3)
+axs[1].set_ylim(0, 5)
+axs[1].set_xticks([])
+axs[1].set_yticks([])
+axs[1].set_title(f"Pitch Call Breakdown")
 
-# Label strike ratios in each zone
-for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
-    text_x = (x_min + x_max) / 2
-    text_y = (y_min + y_max) / 2
-    ax.text(text_x, text_y, f"{fawley_strike_ratios[zone]:.2f}", ha='center', va='center', fontsize=12, color='red')
+for index, row in df_fawley.iterrows():
+    x, y = row['PlateLocSide'], row['PlateLocHeight']
+    pitch_call = row['PitchCall']
+    
+    inside_zone = any((x_min <= x <= x_max and y_min <= y <= y_max) for (x_min, x_max), (y_min, y_max) in zones.values())
 
-# Display plot in Streamlit
+    if pitch_call == "StrikeCalled":
+        if inside_zone:
+            axs[1].scatter(x, y, color='green', marker='o', label="StrikeCalled")
+        else:
+            axs[1].scatter(x, y, color='green', marker='s', label="StrikeGained")
+    else:
+        if inside_zone:
+            axs[1].scatter(x, y, color='red', marker='s', label="StrikeLost")
+        else:
+            axs[1].scatter(x, y, color='red', marker='o', label="BallCalled")
+
+# Add legend
+axs[1].legend(["StrikeCalled", "StrikeLost", "StrikeGained", "BallCalled"])
+
+# Display in Streamlit
 st.pyplot(fig)
