@@ -112,14 +112,6 @@ for x in x_splits:
     axs[0].plot([x, x], [rulebook_bottom, rulebook_top], 'k-', linewidth=1)
 for y in y_splits:
     axs[0].plot([rulebook_left, rulebook_right], [y, y], 'k-', linewidth=1)
-
-# Draw shadow zone structure
-axs[0].plot([expanded_left, expanded_right], [expanded_bottom, expanded_bottom], 'b--', linewidth=2)
-axs[0].plot([expanded_left, expanded_right], [expanded_top, expanded_top], 'b--', linewidth=2)
-axs[0].plot([expanded_left, expanded_left], [expanded_bottom, expanded_top], 'b--', linewidth=2)
-axs[0].plot([expanded_right, expanded_right], [expanded_bottom, expanded_top], 'b--', linewidth=2)
-
-# Label strike ratios
 for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
     text_x = (x_min + x_max) / 2
     text_y = (y_min + y_max) / 2
@@ -127,26 +119,15 @@ for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
 
 # Right Plot - Pitch Scatter Plot + Zone
 axs[1].set_title("Pitch Call Breakdown")
-
 for x in x_splits:
     axs[1].plot([x, x], [rulebook_bottom, rulebook_top], 'k-', linewidth=1)
 for y in y_splits:
     axs[1].plot([rulebook_left, rulebook_right], [y, y], 'k-', linewidth=1)
-
 for _, row in df_fawley.iterrows():
     x, y = row['PlateLocSide'], row['PlateLocHeight']
     pitch_call = row['PitchCall']
-    
     inside_zone = any((x_min <= x <= x_max and y_min <= y <= y_max) for (x_min, x_max), (y_min, y_max) in zones.values())
+    color, marker = ('green', 'o') if pitch_call == "StrikeCalled" else ('red', 's')
+    axs[1].scatter(x, y, color=color, marker=marker)
 
-    if pitch_call == "StrikeCalled":
-        marker = 'o' if inside_zone else 's'
-        axs[1].scatter(x, y, color='green', marker=marker)
-    else:
-        marker = 's' if inside_zone else 'o'
-        axs[1].scatter(x, y, color='red', marker=marker)
-
-axs[1].legend(["StrikeCalled (Green Circle)", "StrikeLost (Red Square)", "StrikeGained (Green Square)", "BallCalled (Red Circle)"])
-
-# Display in Streamlit
 st.pyplot(fig)
