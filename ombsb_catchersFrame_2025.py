@@ -34,8 +34,8 @@ shadow_zones = {
 }
 
 # Define file paths
-sec_csv_path = "/content/drive/MyDrive/Catching Model OMBSB/SEC_Pitching_pbp.csv"
-fawley_csv_path = "/content/drive/MyDrive/CLASS+ (trained with D1 Data)/Spring Intrasquads MASTER.csv"
+sec_csv_path = "SEC_Pitching_pbp.csv_cleaned_for_catchers"
+fawley_csv_path = "Spring Intrasquads MASTER.csv"
 
 # Load datasets with only necessary columns
 columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows', 'Catcher', 
