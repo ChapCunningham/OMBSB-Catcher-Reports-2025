@@ -30,12 +30,12 @@ shadow_zones = {
     "10": [(expanded_left, rulebook_left), (strike_zone_middle_y, rulebook_top)],  # Upper Left Shadow
     "11": [(rulebook_right, expanded_right), (strike_zone_middle_y, rulebook_top)],  # Upper Right Shadow
     "12": [(expanded_left, rulebook_left), (expanded_bottom, strike_zone_middle_y)],  # Lower Left Shadow
-    "13": [(rulebook_right, expanded_right), (expanded_bottom, strike_zone_middle_y)]  # Lower Right Shadow
+    "13": [(rulebook_right, expanded_right), (expanded_bottom, strike_zone_middle_y)],  # Lower Right Shadow
 }
 
 # Define file paths
-sec_csv_path = "SEC_Pitching_pbp_cleaned_for_catchers.csv"
-fawley_csv_path = "Spring Intrasquads MASTER.csv"
+sec_csv_path = "/content/drive/MyDrive/Catching Model OMBSB/SEC_Pitching_pbp.csv"
+fawley_csv_path = "/content/drive/MyDrive/CLASS+ (trained with D1 Data)/Spring Intrasquads MASTER.csv"
 
 # Load datasets with only necessary columns
 columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows', 'Catcher', 
@@ -97,35 +97,24 @@ def calculate_strike_ratios(df):
 sec_strike_ratios = calculate_strike_ratios(df_sec)
 fawley_strike_ratios = calculate_strike_ratios(df_fawley)
 
+# Compute the difference (Fawley - SEC)
+strike_diff = {zone: round(fawley_strike_ratios[zone] - sec_strike_ratios[zone], 2) for zone in sec_strike_ratios}
+
 # Create the plot
 fig, ax = plt.subplots(figsize=(8, 8))
 ax.set_xlim(-3, 3)
 ax.set_ylim(0, 5)
 
-# Draw original strike zone and shadow zone structure
-dx = (rulebook_right - rulebook_left) / 3
-dy = (rulebook_top - rulebook_bottom) / 3
-for i in range(4):
-    ax.plot([rulebook_left + i*dx, rulebook_left + i*dx], [rulebook_bottom, rulebook_top], 'k-', linewidth=1)
-    ax.plot([rulebook_left, rulebook_right], [rulebook_bottom + i*dy, rulebook_bottom + i*dy], 'k-', linewidth=1)
+# Draw missing shadow zone splits (Right & Top)
+ax.plot([rulebook_right, expanded_right], [strike_zone_middle_y, strike_zone_middle_y], 'b--', linewidth=1)
+ax.plot([strike_zone_middle_x, strike_zone_middle_x], [rulebook_top, expanded_top], 'b--', linewidth=1)
 
-# Draw expanded strike zone
-ax.plot([expanded_left, expanded_right], [expanded_bottom, expanded_bottom], 'b--', linewidth=2)
-ax.plot([expanded_left, expanded_right], [expanded_top, expanded_top], 'b--', linewidth=2)
-ax.plot([expanded_left, expanded_left], [expanded_bottom, expanded_top], 'b--', linewidth=2)
-ax.plot([expanded_right, expanded_right], [expanded_bottom, expanded_top], 'b--', linewidth=2)
-
-# Draw shadow zone splits for the left side
-ax.plot([expanded_left, rulebook_left], [strike_zone_middle_y, strike_zone_middle_y], 'b--', linewidth=1)
-ax.plot([strike_zone_middle_x, strike_zone_middle_x], [expanded_bottom, rulebook_bottom], 'b--', linewidth=1)
-
-# Label strike ratios
-for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
+# Label strike differences
+for zone, ((x_min, x_max), (y_min, y_max)) in shadow_zones.items():
     text_x = (x_min + x_max) / 2
     text_y = (y_min + y_max) / 2
-    ax.text(text_x, text_y, f"{fawley_strike_ratios[zone]:.2f}", ha='center', va='center', fontsize=12, color='red')
+    ax.text(text_x, text_y, f"{strike_diff[zone]:.2f}", ha='center', va='center', fontsize=12, color='red')
 
-# Customize plot
 ax.set_title("Optimized Strike Zone with Left Zone Fix")
 ax.set_xlabel("Horizontal Location (PlateLocSide)")
 ax.set_ylabel("Vertical Location (PlateLocHeight)")
