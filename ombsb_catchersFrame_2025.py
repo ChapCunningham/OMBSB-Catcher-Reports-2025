@@ -100,20 +100,20 @@ fawley_strike_ratios = calculate_strike_ratios(df_fawley)
 # Create a two-plot figure
 fig, axs = plt.subplots(1, 2, figsize=(14, 7))
 
-# Left Plot - Strike Zone
-axs[0].set_xlim(-3, 3)
-axs[0].set_ylim(0, 5)
-axs[0].set_xticks([])
-axs[0].set_yticks([])
-axs[0].set_title(f"{selected_catcher} Strike Zone Reports")
+for ax in axs:
+    ax.set_xlim(-3, 3)
+    ax.set_ylim(0, 5)
+    ax.set_xticks([])
+    ax.set_yticks([])
 
-# Draw structured zones
+# Left Plot - Strike Zone with Percentages
+axs[0].set_title(f"{selected_catcher} Strike Zone Reports")
 for x in x_splits:
     axs[0].plot([x, x], [rulebook_bottom, rulebook_top], 'k-', linewidth=1)
 for y in y_splits:
     axs[0].plot([rulebook_left, rulebook_right], [y, y], 'k-', linewidth=1)
 
-# Draw shadow zones
+# Draw shadow zone structure
 axs[0].plot([expanded_left, expanded_right], [expanded_bottom, expanded_bottom], 'b--', linewidth=2)
 axs[0].plot([expanded_left, expanded_right], [expanded_top, expanded_top], 'b--', linewidth=2)
 axs[0].plot([expanded_left, expanded_left], [expanded_bottom, expanded_top], 'b--', linewidth=2)
@@ -125,12 +125,13 @@ for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
     text_y = (y_min + y_max) / 2
     axs[0].text(text_x, text_y, f"{fawley_strike_ratios[zone]:.2f}", ha='center', va='center', fontsize=12, color='red')
 
-# Right Plot - Pitch Scatter Plot
-axs[1].set_xlim(-3, 3)
-axs[1].set_ylim(0, 5)
-axs[1].set_xticks([])
-axs[1].set_yticks([])
+# Right Plot - Pitch Scatter Plot + Zone
 axs[1].set_title("Pitch Call Breakdown")
+
+for x in x_splits:
+    axs[1].plot([x, x], [rulebook_bottom, rulebook_top], 'k-', linewidth=1)
+for y in y_splits:
+    axs[1].plot([rulebook_left, rulebook_right], [y, y], 'k-', linewidth=1)
 
 for _, row in df_fawley.iterrows():
     x, y = row['PlateLocSide'], row['PlateLocHeight']
@@ -145,7 +146,6 @@ for _, row in df_fawley.iterrows():
         marker = 's' if inside_zone else 'o'
         axs[1].scatter(x, y, color='red', marker=marker)
 
-# Add Legend
 axs[1].legend(["StrikeCalled (Green Circle)", "StrikeLost (Red Square)", "StrikeGained (Green Square)", "BallCalled (Red Circle)"])
 
 # Display in Streamlit
