@@ -34,7 +34,7 @@ shadow_zones = {
 }
 
 # Define file paths
-sec_csv_path = "SEC_Pitching_pbp.csv_cleaned_for_catchers"
+sec_csv_path = "SEC_Pitching_pbp.csv_cleaned_for_catchers.csv"
 fawley_csv_path = "Spring Intrasquads MASTER.csv"
 
 # Load datasets with only necessary columns
