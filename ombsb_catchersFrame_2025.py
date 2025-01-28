@@ -38,7 +38,8 @@ sec_csv_path = "SEC_Pitching_pbp_cleaned_for_catchers.csv"
 fawley_csv_path = "Spring Intrasquads MASTER.csv"
 
 # Load datasets with only necessary columns
-columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows', 'Catcher', 'PitchCall', 'TaggedPitchType', 'PlateLocSide', 'PlateLocHeight', 'Date']
+columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows', 'Catcher', 'PitchCall', 
+                  'TaggedPitchType', 'PlateLocSide', 'PlateLocHeight', 'Date']
 df_sec = pd.read_csv(sec_csv_path, usecols=columns_needed)
 df_fawley = pd.read_csv(fawley_csv_path, usecols=columns_needed)
 
@@ -60,7 +61,8 @@ if date_selection == "Single Date":
 elif date_selection == "Date Range":
     date_range = st.sidebar.date_input("Select Date Range", [])
     if len(date_range) == 2:
-        df_fawley = df_fawley[(df_fawley['Date'] >= pd.to_datetime(date_range[0])) & (df_fawley['Date'] <= pd.to_datetime(date_range[1]))]
+        df_fawley = df_fawley[(df_fawley['Date'] >= pd.to_datetime(date_range[0])) & 
+                              (df_fawley['Date'] <= pd.to_datetime(date_range[1]))]
 
 # Filter dataset based on Catcher selection
 if selected_catcher != 'All':
@@ -122,6 +124,18 @@ ax.plot([expanded_left, expanded_right], [expanded_bottom, expanded_bottom], 'b-
 ax.plot([expanded_left, expanded_right], [expanded_top, expanded_top], 'b--', linewidth=2)
 ax.plot([expanded_left, expanded_left], [expanded_bottom, expanded_top], 'b--', linewidth=2)
 ax.plot([expanded_right, expanded_right], [expanded_bottom, expanded_top], 'b--', linewidth=2)
+
+# Draw shadow zone splits
+ax.plot([expanded_left, rulebook_left], [strike_zone_middle_y, strike_zone_middle_y], 'b--', linewidth=1)
+ax.plot([expanded_right, rulebook_right], [strike_zone_middle_y, strike_zone_middle_y], 'b--', linewidth=1)
+ax.plot([strike_zone_middle_x, strike_zone_middle_x], [expanded_bottom, rulebook_bottom], 'b--', linewidth=1)
+ax.plot([strike_zone_middle_x, strike_zone_middle_x], [rulebook_top, expanded_top], 'b--', linewidth=1)
+
+# Label strike ratios in each zone
+for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
+    text_x = (x_min + x_max) / 2
+    text_y = (y_min + y_max) / 2
+    ax.text(text_x, text_y, f"{fawley_strike_ratios[zone]:.2f}", ha='center', va='center', fontsize=12, color='red')
 
 # Display plot in Streamlit
 st.pyplot(fig)
