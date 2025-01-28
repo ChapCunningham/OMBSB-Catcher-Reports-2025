@@ -34,8 +34,8 @@ shadow_zones = {
 }
 
 # Define the file paths
-sec_csv_path = "SEC_Pitching_pbp_cleaned_for_catchers.csv"
-fawley_csv_path = "Spring Intrasquads MASTER.csv"
+sec_csv_path = "/content/drive/MyDrive/Catching Model OMBSB/SEC_Pitching_pbp.csv"
+fawley_csv_path = "/content/drive/MyDrive/CLASS+ (trained with D1 Data)/Spring Intrasquads MASTER.csv"
 
 # Load datasets with only necessary columns
 columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows', 'Catcher', 'PitchCall', 'TaggedPitchType', 'PlateLocSide', 'PlateLocHeight', 'Date']
@@ -53,18 +53,18 @@ st.title("Strike Zone Comparison: Catcher vs SEC")
 catcher_list = ['All'] + sorted(df_fawley['Catcher'].unique().tolist())
 selected_catcher = st.sidebar.selectbox("Select Catcher", catcher_list, index=0)
 
-# Date range selection
-date_range = st.sidebar.date_input("Select Date Range", [])
+date_selection = st.sidebar.radio("Select Date Filter", ["All", "Single Date", "Date Range"])
+if date_selection == "Single Date":
+    selected_date = st.sidebar.date_input("Select Date")
+    df_fawley = df_fawley[df_fawley['Date'] == pd.to_datetime(selected_date)]
+elif date_selection == "Date Range":
+    date_range = st.sidebar.date_input("Select Date Range", [])
+    if len(date_range) == 2:
+        df_fawley = df_fawley[(df_fawley['Date'] >= pd.to_datetime(date_range[0])) & (df_fawley['Date'] <= pd.to_datetime(date_range[1]))]
 
-# Filter dataset based on selections
+# Filter dataset based on Catcher selection
 if selected_catcher != 'All':
     df_fawley = df_fawley[df_fawley['Catcher'] == selected_catcher]
-
-if date_range:
-    if len(date_range) == 1:
-        df_fawley = df_fawley[df_fawley['Date'] == pd.to_datetime(date_range[0])]
-    elif len(date_range) == 2:
-        df_fawley = df_fawley[(df_fawley['Date'] >= pd.to_datetime(date_range[0])) & (df_fawley['Date'] <= pd.to_datetime(date_range[1]))]
 
 # Filter the datasets to include only StrikeCalled or BallCalled
 df_sec = df_sec[df_sec['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
@@ -95,32 +95,33 @@ def calculate_strike_ratios(df):
 sec_strike_ratios = calculate_strike_ratios(df_sec)
 fawley_strike_ratios = calculate_strike_ratios(df_fawley)
 
-# Calculate difference between Fawley and SEC
-strike_diff = {zone: fawley_strike_ratios[zone] - sec_strike_ratios[zone] for zone in zones}
+# Determine title dynamically
+if date_selection == "Single Date":
+    title = f"{selected_catcher} Report for {selected_date}"
+elif date_selection == "Date Range" and len(date_range) == 2:
+    title = f"{selected_catcher} Reports for {date_range[0]} to {date_range[1]}"
+else:
+    title = f"{selected_catcher} Reports for All Dates"
 
 # Plot the strike zone and expanded strike zone
 fig, ax = plt.subplots(figsize=(8, 8))
 ax.set_xlim(-3, 3)
 ax.set_ylim(0, 5)
+ax.set_xticks([])
+ax.set_yticks([])
+ax.set_title(title)
 
 # Draw original strike zone and shadow zone structure
-dx = (rulebook_right - rulebook_left) / 3
-dy = (rulebook_top - rulebook_bottom) / 3
-for i in range(4):
-    ax.plot([rulebook_left + i*dx, rulebook_left + i*dx], [rulebook_bottom, rulebook_top], 'k-', linewidth=1)
-    ax.plot([rulebook_left, rulebook_right], [rulebook_bottom + i*dy, rulebook_bottom + i*dy], 'k-', linewidth=1)
+for x in x_splits:
+    ax.plot([x, x], [rulebook_bottom, rulebook_top], 'k-', linewidth=1)
+for y in y_splits:
+    ax.plot([rulebook_left, rulebook_right], [y, y], 'k-', linewidth=1)
 
 # Draw expanded strike zone
 ax.plot([expanded_left, expanded_right], [expanded_bottom, expanded_bottom], 'b--', linewidth=2)
 ax.plot([expanded_left, expanded_right], [expanded_top, expanded_top], 'b--', linewidth=2)
 ax.plot([expanded_left, expanded_left], [expanded_bottom, expanded_top], 'b--', linewidth=2)
 ax.plot([expanded_right, expanded_right], [expanded_bottom, expanded_top], 'b--', linewidth=2)
-
-# Label strike ratio differences
-for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
-    text_x = (x_min + x_max) / 2
-    text_y = (y_min + y_max) / 2
-    ax.text(text_x, text_y, f"{strike_diff[zone]:.2f}", ha='center', va='center', fontsize=12, color='red')
 
 # Display plot in Streamlit
 st.pyplot(fig)
