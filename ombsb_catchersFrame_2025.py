@@ -85,11 +85,18 @@ def create_zone_scatter(title, pitch_df):
 
     return fig
 
-# Create individual plots with Strike% in titles
+# Compute Strike% BEFORE using them in titles
+strike_percentage_strike = 100.0  # Since this plot only contains StrikeCalled pitches
+strike_percentage_ball = 0.0  # Since this plot only contains BallCalled pitches
+strike_percentage_all = calculate_strike_percentage(all_pitches_df)
+strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)
+
+# Create individual plots with correct Strike% values in titles
 fig1 = create_zone_scatter(f"StrikeCalled Pitches (Strike%: {strike_percentage_strike:.1f}%)", strike_pitches_df)
 fig2 = create_zone_scatter(f"BallCalled Pitches (Strike%: {strike_percentage_ball:.1f}%)", ball_pitches_df)
 fig3 = create_zone_scatter(f"All Pitches (Strike%: {strike_percentage_all:.1f}%)", all_pitches_df)
 fig4 = create_zone_scatter(f"Shadow Zone Pitches (Strike%: {strike_percentage_shadow:.1f}%)", shadow_pitches_df)
+
 
 # Streamlit layout
 st.write("### Updated Strike Zone Breakdown with Strike%")
