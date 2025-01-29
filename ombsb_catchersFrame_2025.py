@@ -186,8 +186,25 @@ import streamlit as st
 x_limits = [-2, 2]
 y_limits = [0.5, 4.5]
 
-# Function to create a scatter plot with strike zone overlays
-def create_zone_scatter(title, pitch_df, show_all=False, only_strikes=False, shadow_zone=False):
+# Adjust the shadow zone boundary calculations
+expand_x = (rulebook_right - rulebook_left) * 0.25
+expand_y = (rulebook_top - rulebook_bottom) * 0.25
+
+expanded_left = rulebook_left - expand_x
+expanded_right = rulebook_right + expand_x
+expanded_bottom = rulebook_bottom - expand_y
+expanded_top = rulebook_top + expand_y
+
+# Define proper shadow zones as separate entities
+corrected_shadow_zones = {
+    "10": [(expanded_left, rulebook_left), (strike_zone_middle_y, rulebook_top)],  # Upper Left Shadow
+    "11": [(rulebook_right, expanded_right), (strike_zone_middle_y, rulebook_top)],  # Upper Right Shadow
+    "12": [(expanded_left, rulebook_left), (expanded_bottom, strike_zone_middle_y)],  # Lower Left Shadow
+    "13": [(rulebook_right, expanded_right), (expanded_bottom, strike_zone_middle_y)]  # Lower Right Shadow
+}
+
+# Function to create a scatter plot with the correctly drawn shadow zones
+def create_zone_scatter(title, pitch_df):
     fig = go.Figure()
 
     # Add scatter plot for pitches
@@ -206,9 +223,27 @@ def create_zone_scatter(title, pitch_df, show_all=False, only_strikes=False, sha
         fig.add_shape(type="line", x0=x_splits[i], x1=x_splits[i], y0=rulebook_bottom, y1=rulebook_top, line=dict(color="black", width=1))
         fig.add_shape(type="line", x0=rulebook_left, x1=rulebook_right, y0=y_splits[i], y1=y_splits[i], line=dict(color="black", width=1))
 
+    # Draw expanded strike zone outline (25% larger box)
+    fig.add_shape(type="rect", x0=expanded_left, x1=expanded_right, y0=expanded_bottom, y1=expanded_top,
+                  line=dict(color="blue", width=2, dash="dash"))
+
     # Draw shadow zones
-    for ((x_min, x_max), (y_min, y_max)) in shadow_zones.values():
-        fig.add_shape(type="rect", x0=x_min, x1=x_max, y0=y_min, y1=y_max, line=dict(color="blue", width=1, dash="dash"))
+    for zone, ((x_min, x_max), (y_min, y_max)) in corrected_shadow_zones.items():
+        fig.add_shape(type="rect", x0=x_min, x1=x_max, y0=y_min, y1=y_max,
+                      line=dict(color="blue", width=2, dash="dash"))
+
+    # Add connecting lines to properly separate shadow zones
+    fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=rulebook_top, y1=expanded_top, 
+                  line=dict(color="red", width=2))  # Top middle connector
+
+    fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=expanded_bottom, y1=rulebook_bottom, 
+                  line=dict(color="red", width=2))  # Bottom middle connector
+
+    fig.add_shape(type="line", x0=expanded_left, x1=rulebook_left, y0=strike_zone_middle_y, y1=strike_zone_middle_y, 
+                  line=dict(color="red", width=2))  # Left middle connector
+
+    fig.add_shape(type="line", x0=rulebook_right, x1=expanded_right, y0=strike_zone_middle_y, y1=strike_zone_middle_y, 
+                  line=dict(color="red", width=2))  # Right middle connector
 
     # Update layout
     fig.update_layout(
@@ -225,17 +260,17 @@ def create_zone_scatter(title, pitch_df, show_all=False, only_strikes=False, sha
 all_pitches_df = filtered_fawley.copy()
 strike_pitches_df = filtered_fawley[filtered_fawley["PitchCall"] == "StrikeCalled"]
 shadow_pitches_df = filtered_fawley[
-    (filtered_fawley["PlateLocSide"] < rulebook_left) | (filtered_fawley["PlateLocSide"] > rulebook_right) |
-    (filtered_fawley["PlateLocHeight"] < rulebook_bottom) | (filtered_fawley["PlateLocHeight"] > rulebook_top)
+    ((filtered_fawley["PlateLocSide"] < rulebook_left) | (filtered_fawley["PlateLocSide"] > rulebook_right)) |
+    ((filtered_fawley["PlateLocHeight"] < rulebook_bottom) | (filtered_fawley["PlateLocHeight"] > rulebook_top))
 ]
 
 # Create individual plots
 fig1 = create_zone_scatter("All Pitches (Green = Strike, Red = Ball)", all_pitches_df)
-fig2 = create_zone_scatter("Only StrikeCalled Pitches", strike_pitches_df, only_strikes=True)
-fig3 = create_zone_scatter("Pitches in Shadow Zone", shadow_pitches_df, shadow_zone=True)
+fig2 = create_zone_scatter("Only StrikeCalled Pitches", strike_pitches_df)
+fig3 = create_zone_scatter("Pitches in Shadow Zone", shadow_pitches_df)
 
 # Streamlit layout
-st.write("### Strike Zone Breakdown")
+st.write("### Corrected Strike Zone Breakdown")
 
 col1, col2 = st.columns(2)
 col3, col4 = st.columns(2)
@@ -244,4 +279,5 @@ col1.plotly_chart(fig1, use_container_width=True)
 col2.plotly_chart(fig2, use_container_width=True)
 col3.plotly_chart(fig3, use_container_width=True)
 # Leave col4 empty for now (reserved for future expansion)
+
 
