@@ -47,6 +47,11 @@ def create_zone_scatter(title, pitch_df):
             marker=dict(symbol=marker_shape, color=color, size=8),
             showlegend=False
         ))
+# Compute Strike% BEFORE using them in titles
+strike_percentage_strike = 100.0  # Since this plot only contains StrikeCalled pitches
+strike_percentage_ball = 0.0  # Since this plot only contains BallCalled pitches
+strike_percentage_all = calculate_strike_percentage(all_pitches_df)
+strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)
 
     # Draw main strike zone
     for i in range(4):
@@ -85,11 +90,6 @@ def create_zone_scatter(title, pitch_df):
 
     return fig
 
-# Compute Strike% BEFORE using them in titles
-strike_percentage_strike = 100.0  # Since this plot only contains StrikeCalled pitches
-strike_percentage_ball = 0.0  # Since this plot only contains BallCalled pitches
-strike_percentage_all = calculate_strike_percentage(all_pitches_df)
-strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)
 
 # Create individual plots with correct Strike% values in titles
 fig1 = create_zone_scatter(f"StrikeCalled Pitches (Strike%: {strike_percentage_strike:.1f}%)", strike_pitches_df)
