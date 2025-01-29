@@ -183,8 +183,8 @@ import plotly.graph_objects as go
 import streamlit as st
 
 # Set x and y limits for all plots
-x_limits = [-2, 2]
-y_limits = [0, 5]
+x_limits = [-2.5, 2.5]
+y_limits = [0.5, 4.5]
 
 # Adjust the shadow zone boundary calculations
 expand_x = (rulebook_right - rulebook_left) * 0.25
