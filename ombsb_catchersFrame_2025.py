@@ -40,6 +40,28 @@ for i in range(3):
         zone_id += 1
 zones.update(shadow_zones)
 
+# Define pitch type to marker mapping
+pitch_marker_map = {
+    "Fastball": "circle",
+    "Sinker": "circle",
+    "Cutter": "triangle-up",
+    "Slider": "triangle-up",
+    "Curveball": "triangle-up",
+    "Sweeper": "triangle-up",
+    "Splitter": "square",
+    "ChangeUp": "square"
+}
+
+# Function to get marker shape based on pitch type
+def get_marker_shape(pitch_type):
+    return pitch_marker_map.get(pitch_type, "diamond")  # Default to rhombus (diamond) for "Other"
+
+# Function to calculate Strike% for a given dataset
+def calculate_strike_percentage(df):
+    if len(df) == 0:
+        return 0.0  # Avoid division by zero
+    return (len(df[df["PitchCall"] == "StrikeCalled"]) / len(df)) * 100
+
 # File paths
 sec_csv_path = "SEC_Pitching_pbp_cleaned_for_catchers.csv"
 fawley_csv_path = "Spring Intrasquads MASTER.csv"
@@ -73,36 +95,35 @@ filtered_fawley = filtered_fawley[
     (pd.to_datetime(filtered_fawley['Date']) <= pd.Timestamp(date_range[1]))
 ]
 
-# Function to calculate strike ratios
-def calculate_strike_ratios(df):
-    strike_ratios = {}
-    for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
-        zone_df = df[(df['PlateLocSide'] >= x_min) & (df['PlateLocSide'] < x_max) &
-                     (df['PlateLocHeight'] >= y_min) & (df['PlateLocHeight'] < y_max)]
+# Prepare datasets for each plot
+strike_pitches_df = filtered_fawley[filtered_fawley["PitchCall"] == "StrikeCalled"]
+ball_pitches_df = filtered_fawley[filtered_fawley["PitchCall"] == "BallCalled"]
+all_pitches_df = filtered_fawley.copy()
+shadow_pitches_df = filtered_fawley[
+    ((filtered_fawley["PlateLocSide"] < rulebook_left) | (filtered_fawley["PlateLocSide"] > rulebook_right)) |
+    ((filtered_fawley["PlateLocHeight"] < rulebook_bottom) | (filtered_fawley["PlateLocHeight"] > rulebook_top))
+]
 
-        total_pitches = len(zone_df)
-        strikes = len(zone_df[zone_df['PitchCall'] == 'StrikeCalled'])
-
-        strike_ratio = strikes / total_pitches if total_pitches > 0 else 0
-        strike_ratios[zone] = strike_ratio
-    return strike_ratios
-
-# Calculate strike ratios for the selected catcher and SEC averages
-fawley_strike_ratios = calculate_strike_ratios(filtered_fawley)
-sec_strike_ratios = calculate_strike_ratios(df_sec)
+# Calculate Strike% for each category
+strike_percentage_all = calculate_strike_percentage(all_pitches_df)
+strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)
+strike_percentage_strike = 100.0  # Since this plot only contains StrikeCalled pitches
+strike_percentage_ball = 0.0  # Since this plot only contains BallCalled pitches
 
 # Function to create a scatter plot with the correctly drawn shadow zones
 def create_zone_scatter(title, pitch_df):
     fig = go.Figure()
 
-    # Add scatter plot for pitches
+    # Add scatter plot for pitches with different shapes
     for index, row in pitch_df.iterrows():
         color = "green" if row["PitchCall"] == "StrikeCalled" else "red"
+        marker_shape = get_marker_shape(row["TaggedPitchType"])
+
         fig.add_trace(go.Scatter(
             x=[row["PlateLocSide"]],
             y=[row["PlateLocHeight"]],
             mode="markers",
-            marker=dict(color=color, size=8),
+            marker=dict(symbol=marker_shape, color=color, size=8),
             showlegend=False
         ))
 
@@ -127,22 +148,19 @@ def create_zone_scatter(title, pitch_df):
 
     return fig
 
-# Create individual plots
-fig1 = create_zone_scatter("StrikeCalled Pitches", filtered_fawley[filtered_fawley["PitchCall"] == "StrikeCalled"])
-fig2 = create_zone_scatter("BallCalled Pitches", filtered_fawley[filtered_fawley["PitchCall"] == "BallCalled"])
-fig3 = create_zone_scatter("All Pitches", filtered_fawley)
-fig4 = create_zone_scatter("Shadow Zone Pitches", filtered_fawley[
-    ((filtered_fawley["PlateLocSide"] < rulebook_left) | (filtered_fawley["PlateLocSide"] > rulebook_right)) |
-    ((filtered_fawley["PlateLocHeight"] < rulebook_bottom) | (filtered_fawley["PlateLocHeight"] > rulebook_top))
-])
+# Create individual plots with Strike% in titles
+fig1 = create_zone_scatter(f"StrikeCalled Pitches (Strike%: {strike_percentage_strike:.1f}%)", strike_pitches_df)
+fig2 = create_zone_scatter(f"BallCalled Pitches (Strike%: {strike_percentage_ball:.1f}%)", ball_pitches_df)
+fig3 = create_zone_scatter(f"All Pitches (Strike%: {strike_percentage_all:.1f}%)", all_pitches_df)
+fig4 = create_zone_scatter(f"Shadow Zone Pitches (Strike%: {strike_percentage_shadow:.1f}%)", shadow_pitches_df)
 
 # Streamlit layout
-st.write("### Updated Strike Zone Breakdown")
+st.write("### Updated Strike Zone Breakdown with Strike%")
 
 col1, col2 = st.columns(2)
 col3, col4 = st.columns(2)
 
-col1.plotly_chart(fig1, use_container_width=True)  # StrikeCalled Pitches
-col2.plotly_chart(fig2, use_container_width=True)  # BallCalled Pitches
-col3.plotly_chart(fig3, use_container_width=True)  # All Pitches
-col4.plotly_chart(fig4, use_container_width=True)  # Shadow Zone Pitches
+col1.plotly_chart(fig1, use_container_width=True)
+col2.plotly_chart(fig2, use_container_width=True)
+col3.plotly_chart(fig3, use_container_width=True)
+col4.plotly_chart(fig4, use_container_width=True)
