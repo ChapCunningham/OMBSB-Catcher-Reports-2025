@@ -17,10 +17,13 @@ expanded_right = rulebook_right + expand_x
 expanded_bottom = rulebook_bottom - expand_y
 expanded_top = rulebook_top + expand_y
 
+# Define middle of the strike zone
+strike_zone_middle_x = (rulebook_left + rulebook_right) / 2
+strike_zone_middle_y = (rulebook_bottom + rulebook_top) / 2
+
 # Define 9 even zones inside the original strike zone
 x_splits = np.linspace(rulebook_left, rulebook_right, 4)
 y_splits = np.linspace(rulebook_bottom, rulebook_top, 4)
-
 # Define shadow zones
 shadow_zones = {
     "10": [(expanded_left, rulebook_left), (strike_zone_middle_y, rulebook_top)],  # Upper Left Shadow
