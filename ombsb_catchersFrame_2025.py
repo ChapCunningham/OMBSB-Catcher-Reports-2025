@@ -93,11 +93,10 @@ pitch_marker_map = {
 def get_marker_shape(pitch_type):
     return pitch_marker_map.get(pitch_type, "diamond")  # Default to rhombus (diamond) for "Other"
 
-# Function to create a scatter plot with correctly drawn shadow zones and pitch shapes
 def create_zone_scatter(title, pitch_df):
     fig = go.Figure()
 
-    # Add scatter plot for pitches with different shapes
+    # Add scatter plot for pitches with hover tooltips
     for index, row in pitch_df.iterrows():
         color = "green" if row["PitchCall"] == "StrikeCalled" else "red"
         marker_shape = get_marker_shape(row["TaggedPitchType"])
@@ -107,7 +106,12 @@ def create_zone_scatter(title, pitch_df):
             y=[row["PlateLocHeight"]],
             mode="markers",
             marker=dict(symbol=marker_shape, color=color, size=8),
-            showlegend=False
+            showlegend=False,
+            hoverinfo="text",
+            text=f"Pitcher: {row['Pitcher']}<br>"
+                 f"Pitch Type: {row['TaggedPitchType']}<br>"
+                 f"Batter: {row['Batter']}<br>"
+                 f"BatterSide: {row['BatterSide']}"
         ))
 
     # Draw main strike zone
