@@ -144,3 +144,30 @@ ax.set_ylabel("Vertical Location (PlateLocHeight)")
 
 # Show the plot in Streamlit
 st.pyplot(fig)
+
+
+
+
+# Prepare table data
+table_data = []
+for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
+    # Get SEC averages (unchanging)
+    sec_avg = sec_strike_ratios[zone] * 100  # Convert to percentage
+
+    # Get selected catcher's data
+    fawley_avg = fawley_strike_ratios.get(zone, 0) * 100  # Convert to percentage
+    num_pitches = len(filtered_fawley[
+        (filtered_fawley['PlateLocSide'] >= x_min) & (filtered_fawley['PlateLocSide'] < x_max) &
+        (filtered_fawley['PlateLocHeight'] >= y_min) & (filtered_fawley['PlateLocHeight'] < y_max)
+    ])
+
+    # Append to table data
+    table_data.append([zone, f"{sec_avg:.1f}%", f"{fawley_avg:.1f}%", num_pitches])
+
+# Convert to DataFrame for display
+table_df = pd.DataFrame(table_data, columns=["Zone", "SEC Avg (%)", f"{selected_catcher} Avg (%)", "Pitches Seen"])
+
+# Display in Streamlit
+st.write("### Zone Comparison Table")
+st.dataframe(table_df, hide_index=True)
+
