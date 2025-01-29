@@ -30,6 +30,18 @@ shadow_zones = {
     "12": [(shadow_left, rulebook_left), (shadow_bottom, strike_zone_middle_y)],  # Lower Left Shadow
     "13": [(rulebook_right, shadow_right), (shadow_bottom, strike_zone_middle_y)]  # Lower Right Shadow
 }
+# Function to calculate Strike% for a given dataset
+def calculate_strike_percentage(df):
+    if len(df) == 0:
+        return 0.0  # Avoid division by zero
+    return (len(df[df["PitchCall"] == "StrikeCalled"]) / len(df)) * 100
+
+# Compute Strike% BEFORE using them in titles
+strike_percentage_strike = 100.0  # Since this plot only contains StrikeCalled pitches
+strike_percentage_ball = 0.0  # Since this plot only contains BallCalled pitches
+strike_percentage_all = calculate_strike_percentage(all_pitches_df)  # Now function exists
+strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)  # Now function exists
+
 
 # Function to create a scatter plot with the correctly drawn shadow zones
 def create_zone_scatter(title, pitch_df):
@@ -85,12 +97,6 @@ def create_zone_scatter(title, pitch_df):
     )
 
     return fig
-
-# Compute Strike% BEFORE using them in titles
-strike_percentage_strike = 100.0  # Since this plot only contains StrikeCalled pitches
-strike_percentage_ball = 0.0  # Since this plot only contains BallCalled pitches
-strike_percentage_all = calculate_strike_percentage(all_pitches_df)
-strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)
 
 
 # Create individual plots with correct Strike% values in titles
