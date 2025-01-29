@@ -186,6 +186,22 @@ import streamlit as st
 x_limits = [-2.5, 2.5]
 y_limits = [0.5, 4.5]
 
+# Define pitch type to marker mapping
+pitch_marker_map = {
+    "Fastball": "circle",
+    "Sinker": "circle",
+    "Cutter": "triangle-up",
+    "Slider": "triangle-up",
+    "Curveball": "triangle-up",
+    "Sweeper": "triangle-up",
+    "Splitter": "square",
+    "ChangeUp": "square"
+}
+
+# Function to get marker shape based on pitch type
+def get_marker_shape(pitch_type):
+    return pitch_marker_map.get(pitch_type, "diamond")  # Default to rhombus (diamond) for "Other"
+
 # Function to calculate Strike% for a given dataset
 def calculate_strike_percentage(df):
     if len(df) == 0:
@@ -211,14 +227,16 @@ strike_percentage_ball = 0.0  # Since this plot only contains BallCalled pitches
 def create_zone_scatter(title, pitch_df):
     fig = go.Figure()
 
-    # Add scatter plot for pitches
+    # Add scatter plot for pitches with different shapes
     for index, row in pitch_df.iterrows():
         color = "green" if row["PitchCall"] == "StrikeCalled" else "red"
+        marker_shape = get_marker_shape(row["TaggedPitchType"])
+
         fig.add_trace(go.Scatter(
             x=[row["PlateLocSide"]],
             y=[row["PlateLocHeight"]],
             mode="markers",
-            marker=dict(color=color, size=8),
+            marker=dict(symbol=marker_shape, color=color, size=8),
             showlegend=False
         ))
 
@@ -244,11 +262,13 @@ def create_zone_scatter(title, pitch_df):
     fig.add_shape(type="line", x0=rulebook_right, x1=expanded_right, y0=strike_zone_middle_y, y1=strike_zone_middle_y, 
                   line=dict(color="blue", width=2))  # Right middle connector
 
-    # Update layout
+    # Add thin black border around the entire plot
     fig.update_layout(
         title=title,
         xaxis=dict(range=x_limits, title="PlateLocSide"),
         yaxis=dict(range=y_limits, title="PlateLocHeight"),
+        plot_bgcolor='white',
+        margin=dict(l=50, r=50, t=50, b=50),
         showlegend=False,
         width=400, height=400
     )
@@ -261,6 +281,28 @@ fig2 = create_zone_scatter(f"BallCalled Pitches (Strike%: {strike_percentage_bal
 fig3 = create_zone_scatter(f"All Pitches (Strike%: {strike_percentage_all:.1f}%)", all_pitches_df)
 fig4 = create_zone_scatter(f"Shadow Zone Pitches (Strike%: {strike_percentage_shadow:.1f}%)", shadow_pitches_df)
 
+# Create the legend for pitch type symbols
+legend_fig = go.Figure()
+
+pitch_types = ["Fastball", "Sinker", "Cutter", "Slider", "Curveball", "Sweeper", "Splitter", "ChangeUp", "Other"]
+symbols = ["circle", "circle", "triangle-up", "triangle-up", "triangle-up", "triangle-up", "square", "square", "diamond"]
+
+for pitch, symbol in zip(pitch_types, symbols):
+    legend_fig.add_trace(go.Scatter(
+        x=[None], y=[None], mode='markers',
+        marker=dict(symbol=symbol, color="black", size=10),
+        name=pitch if pitch != "Other" else "Rhombus is Other"
+    ))
+
+legend_fig.update_layout(
+    title="Pitch Type Key",
+    showlegend=True,
+    width=400, height=200,
+    margin=dict(l=50, r=50, t=50, b=50),
+    xaxis=dict(visible=False),
+    yaxis=dict(visible=False)
+)
+
 # Streamlit layout
 st.write("### Updated Strike Zone Breakdown with Strike%")
 
@@ -271,4 +313,8 @@ col1.plotly_chart(fig1, use_container_width=True)  # StrikeCalled Pitches
 col2.plotly_chart(fig2, use_container_width=True)  # BallCalled Pitches
 col3.plotly_chart(fig3, use_container_width=True)  # All Pitches
 col4.plotly_chart(fig4, use_container_width=True)  # Shadow Zone Pitches
+
+# Display pitch type legend
+st.plotly_chart(legend_fig, use_container_width=True)
+
 
