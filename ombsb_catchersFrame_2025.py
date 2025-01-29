@@ -133,7 +133,7 @@ for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
     
     # Display the percentage difference in the plot
     ax.text(text_x, text_y, f"{diff_percentage:.1f}%", 
-            ha='center', va='center', fontsize=12, color=color)
+            ha='center', va='center', fontsize=10, color=color)
 
 
 # Customize plot
