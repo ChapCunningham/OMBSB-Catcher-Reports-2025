@@ -31,93 +31,14 @@ shadow_zones = {
     "13": [(rulebook_right, shadow_right), (shadow_bottom, strike_zone_middle_y)]  # Lower Right Shadow
 }
 
-# Combine strike zones and shadow zones
-zones = {}
-zone_id = 1
-for i in range(3):
-    for j in range(3):
-        zones[str(zone_id)] = [(x_splits[j], x_splits[j + 1]), (y_splits[i], y_splits[i + 1])]
-        zone_id += 1
-zones.update(shadow_zones)
-
-# Define pitch type to marker mapping
-pitch_marker_map = {
-    "Fastball": "circle",
-    "Sinker": "circle",
-    "Cutter": "triangle-up",
-    "Slider": "triangle-up",
-    "Curveball": "triangle-up",
-    "Sweeper": "triangle-up",
-    "Splitter": "square",
-    "ChangeUp": "square"
-}
-
-# Function to get marker shape based on pitch type
-def get_marker_shape(pitch_type):
-    return pitch_marker_map.get(pitch_type, "diamond")  # Default to rhombus (diamond) for "Other"
-
-# Function to calculate Strike% for a given dataset
-def calculate_strike_percentage(df):
-    if len(df) == 0:
-        return 0.0  # Avoid division by zero
-    return (len(df[df["PitchCall"] == "StrikeCalled"]) / len(df)) * 100
-
-# File paths
-sec_csv_path = "SEC_Pitching_pbp_cleaned_for_catchers.csv"
-fawley_csv_path = "Spring Intrasquads MASTER.csv"
-
-# Load datasets
-columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
-                  'Catcher', 'PitchCall', 'TaggedPitchType',
-                  'PlateLocSide', 'PlateLocHeight', 'Date']
-df_sec = pd.read_csv(sec_csv_path, usecols=columns_needed)
-df_fawley = pd.read_csv(fawley_csv_path, usecols=columns_needed)
-
-# Filter for relevant PitchCalls
-df_sec = df_sec[df_sec['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
-df_fawley = df_fawley[df_fawley['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
-
-# Streamlit UI
-st.title("Catcher Strike Zone Comparison")
-
-# Catcher selection
-catcher_options = df_fawley['Catcher'].dropna().unique()
-selected_catcher = st.selectbox("Select a Catcher:", catcher_options)
-
-# Date selection
-date_options = pd.to_datetime(df_fawley['Date']).dropna().unique()
-date_range = st.date_input("Select Date Range:", [date_options.min(), date_options.max()])
-
-# Filter data
-filtered_fawley = df_fawley[df_fawley['Catcher'] == selected_catcher]
-filtered_fawley = filtered_fawley[
-    (pd.to_datetime(filtered_fawley['Date']) >= pd.Timestamp(date_range[0])) &
-    (pd.to_datetime(filtered_fawley['Date']) <= pd.Timestamp(date_range[1]))
-]
-
-# Prepare datasets for each plot
-strike_pitches_df = filtered_fawley[filtered_fawley["PitchCall"] == "StrikeCalled"]
-ball_pitches_df = filtered_fawley[filtered_fawley["PitchCall"] == "BallCalled"]
-all_pitches_df = filtered_fawley.copy()
-shadow_pitches_df = filtered_fawley[
-    ((filtered_fawley["PlateLocSide"] < rulebook_left) | (filtered_fawley["PlateLocSide"] > rulebook_right)) |
-    ((filtered_fawley["PlateLocHeight"] < rulebook_bottom) | (filtered_fawley["PlateLocHeight"] > rulebook_top))
-]
-
-# Calculate Strike% for each category
-strike_percentage_all = calculate_strike_percentage(all_pitches_df)
-strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)
-strike_percentage_strike = 100.0  # Since this plot only contains StrikeCalled pitches
-strike_percentage_ball = 0.0  # Since this plot only contains BallCalled pitches
-
 # Function to create a scatter plot with the correctly drawn shadow zones
 def create_zone_scatter(title, pitch_df):
     fig = go.Figure()
 
-    # Add scatter plot for pitches with different shapes
+    # Add scatter plot for pitches
     for index, row in pitch_df.iterrows():
         color = "green" if row["PitchCall"] == "StrikeCalled" else "red"
-        marker_shape = get_marker_shape(row["TaggedPitchType"])
+        marker_shape = pitch_marker_map.get(row["TaggedPitchType"], "diamond")  # Default to rhombus
 
         fig.add_trace(go.Scatter(
             x=[row["PlateLocSide"]],
@@ -132,10 +53,26 @@ def create_zone_scatter(title, pitch_df):
         fig.add_shape(type="line", x0=x_splits[i], x1=x_splits[i], y0=rulebook_bottom, y1=rulebook_top, line=dict(color="black", width=1))
         fig.add_shape(type="line", x0=rulebook_left, x1=rulebook_right, y0=y_splits[i], y1=y_splits[i], line=dict(color="black", width=1))
 
-    # Draw shadow zones
-    for zone, ((x_min, x_max), (y_min, y_max)) in shadow_zones.items():
-        fig.add_shape(type="rect", x0=x_min, x1=x_max, y0=y_min, y1=y_max,
-                      line=dict(color="blue", width=2, dash="dash"))
+    # Draw shadow zone outlines (ensuring full enclosure)
+    fig.add_shape(type="rect", x0=shadow_left, x1=shadow_right, y0=shadow_bottom, y1=shadow_top,
+                  line=dict(color="blue", width=2, dash="dash"))
+
+    # Add missing horizontal lines at top and bottom to fully enclose shadow zone
+    fig.add_shape(type="line", x0=shadow_left, x1=shadow_right, y0=shadow_top, y1=shadow_top,
+                  line=dict(color="blue", width=2, dash="dash"))  # Top boundary
+    fig.add_shape(type="line", x0=shadow_left, x1=shadow_right, y0=shadow_bottom, y1=shadow_bottom,
+                  line=dict(color="blue", width=2, dash="dash"))  # Bottom boundary
+
+    # Add vertical connectors to fully split shadow zones
+    fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=shadow_bottom, y1=rulebook_bottom,
+                  line=dict(color="blue", width=2, dash="dash"))  # Bottom middle connector
+    fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=rulebook_top, y1=shadow_top,
+                  line=dict(color="blue", width=2, dash="dash"))  # Top middle connector
+
+    fig.add_shape(type="line", x0=shadow_left, x1=rulebook_left, y0=strike_zone_middle_y, y1=strike_zone_middle_y,
+                  line=dict(color="blue", width=2, dash="dash"))  # Left middle connector
+    fig.add_shape(type="line", x0=rulebook_right, x1=shadow_right, y0=strike_zone_middle_y, y1=strike_zone_middle_y,
+                  line=dict(color="blue", width=2, dash="dash"))  # Right middle connector
 
     # Update layout
     fig.update_layout(
