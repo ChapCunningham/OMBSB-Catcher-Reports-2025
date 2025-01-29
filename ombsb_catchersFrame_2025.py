@@ -3,7 +3,7 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
-# Define constants
+# Define constants for the strike zone
 rulebook_left = -0.83083
 rulebook_right = 0.83083
 rulebook_bottom = 1.5
@@ -38,40 +38,38 @@ for i in range(3):
         zone_id += 1
 zones.update(shadow_zones)
 
-# Load datasets
+# File paths
 sec_csv_path = "SEC_Pitching_pbp_cleaned_for_catchers.csv"
 fawley_csv_path = "Spring Intrasquads MASTER.csv"
+
+# Load datasets
 columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
                   'Catcher', 'PitchCall', 'TaggedPitchType',
                   'PlateLocSide', 'PlateLocHeight', 'Date']
 df_sec = pd.read_csv(sec_csv_path, usecols=columns_needed)
 df_fawley = pd.read_csv(fawley_csv_path, usecols=columns_needed)
 
-# Combine datasets
-df_combined = pd.concat([df_sec, df_fawley])
-df_combined['Date'] = pd.to_datetime(df_combined['Date'], errors='coerce')
+# Filter for relevant PitchCalls
+df_sec = df_sec[df_sec['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
+df_fawley = df_fawley[df_fawley['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
 
 # Streamlit UI
-st.title("Strike Zone Comparison Tool")
+st.title("Catcher Strike Zone Comparison")
 
 # Catcher selection
-catcher_options = ["Spring Preseason All"] + list(df_combined['Catcher'].dropna().unique())
-selected_catcher = st.selectbox("Select Catcher:", catcher_options)
+catcher_options = df_fawley['Catcher'].dropna().unique()
+selected_catcher = st.selectbox("Select a Catcher:", catcher_options)
 
 # Date selection
-date_options = df_combined['Date'].dropna().sort_values().unique()
-date_range = st.date_input("Select Date Range:", [date_options[0], date_options[-1]])
+date_options = pd.to_datetime(df_fawley['Date']).dropna().unique()
+date_range = st.date_input("Select Date Range:", [date_options.min(), date_options.max()])
 
-# Filter data based on selection
-filtered_df = df_combined.copy()
-
-if selected_catcher != "Spring Preseason All":
-    filtered_df = filtered_df[filtered_df['Catcher'] == selected_catcher]
-
-if len(date_range) == 2:
-    start_date, end_date = date_range
-    filtered_df = filtered_df[(filtered_df['Date'] >= pd.Timestamp(start_date)) &
-                              (filtered_df['Date'] <= pd.Timestamp(end_date))]
+# Filter data
+filtered_fawley = df_fawley[df_fawley['Catcher'] == selected_catcher]
+filtered_fawley = filtered_fawley[
+    (pd.to_datetime(filtered_fawley['Date']) >= pd.Timestamp(date_range[0])) &
+    (pd.to_datetime(filtered_fawley['Date']) <= pd.Timestamp(date_range[1]))
+]
 
 # Function to calculate strike ratios
 def calculate_strike_ratios(df):
@@ -87,10 +85,14 @@ def calculate_strike_ratios(df):
         strike_ratios[zone] = strike_ratio
     return strike_ratios
 
-# Calculate strike ratios
-strike_ratios = calculate_strike_ratios(filtered_df)
+# Calculate strike ratios for the selected catcher and SEC averages
+fawley_strike_ratios = calculate_strike_ratios(filtered_fawley)
+sec_strike_ratios = calculate_strike_ratios(df_sec)
 
-# Plot the strike zone
+# Calculate differences
+strike_diff = {zone: fawley_strike_ratios[zone] - sec_strike_ratios[zone] for zone in zones}
+
+# Plot the strike zone comparison
 fig, ax = plt.subplots(figsize=(8, 8))
 ax.set_xlim(-3, 3)
 ax.set_ylim(0, 5)
@@ -107,14 +109,14 @@ ax.plot([expanded_left, expanded_right], [expanded_top, expanded_top], 'b--', li
 ax.plot([expanded_left, expanded_left], [expanded_bottom, expanded_top], 'b--', linewidth=2)
 ax.plot([expanded_right, expanded_right], [expanded_bottom, expanded_top], 'b--', linewidth=2)
 
-# Label strike ratios
+# Label strike differences
 for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
     text_x = (x_min + x_max) / 2
     text_y = (y_min + y_max) / 2
-    ax.text(text_x, text_y, f"{strike_ratios[zone]:.2f}", ha='center', va='center', fontsize=12, color='red')
+    ax.text(text_x, text_y, f"{strike_diff[zone]:.2f}", ha='center', va='center', fontsize=12, color='red')
 
 # Customize plot
-title = f"Strike Zone Comparison: {selected_catcher} ({date_range[0]} to {date_range[1]})"
+title = f"Strike Zone Comparison: {selected_catcher} vs SEC Averages\n({date_range[0]} to {date_range[1]})"
 ax.set_title(title)
 ax.set_xlabel("Horizontal Location (PlateLocSide)")
 ax.set_ylabel("Vertical Location (PlateLocHeight)")
