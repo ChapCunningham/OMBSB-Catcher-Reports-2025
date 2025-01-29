@@ -49,9 +49,6 @@ selected_catcher = st.selectbox("Select a Catcher:", catcher_options)
 date_options = pd.to_datetime(df_fawley['Date']).dropna().unique()
 date_range = st.date_input("Select Date Range:", [date_options.min(), date_options.max()])
 
-
-
-
 # Filter data
 filtered_fawley = df_fawley[df_fawley['Catcher'] == selected_catcher]
 filtered_fawley = filtered_fawley[
@@ -96,11 +93,9 @@ pitch_marker_map = {
 def get_marker_shape(pitch_type):
     return pitch_marker_map.get(pitch_type, "diamond")  # Default to rhombus (diamond) for "Other"
 
-# Function to create a scatter plot with correctly drawn shadow zones and pitch shapes
 def create_zone_scatter(title, pitch_df):
     fig = go.Figure()
 
-    # Add scatter plot for pitches with different shapes
     # Add scatter plot for pitches with hover tooltips
     for index, row in pitch_df.iterrows():
         color = "green" if row["PitchCall"] == "StrikeCalled" else "red"
@@ -111,7 +106,6 @@ def create_zone_scatter(title, pitch_df):
             y=[row["PlateLocHeight"]],
             mode="markers",
             marker=dict(symbol=marker_shape, color=color, size=8),
-            showlegend=False,
             showlegend=False,
             hoverinfo="text",
             text=f"Pitcher: {row['Pitcher']}<br>"
@@ -174,4 +168,4 @@ col3, col4 = st.columns(2)
 col1.plotly_chart(fig1, use_container_width=True)
 col2.plotly_chart(fig2, use_container_width=True)
 col3.plotly_chart(fig3, use_container_width=True)
-col4.plotly_chart(fig4, use_container_width=True)
+col4.plotly_chart(fig4, use_container_width=True
