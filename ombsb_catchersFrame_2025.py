@@ -23,10 +23,10 @@ y_splits = np.linspace(rulebook_bottom, rulebook_top, 4)
 
 # Define shadow zones
 shadow_zones = {
-    "10": [(expanded_left, rulebook_left), (2.545, rulebook_top)],  # Upper Left Shadow
-    "11": [(rulebook_right, expanded_right), (2.545, rulebook_top)],  # Upper Right Shadow
-    "12": [(expanded_left, rulebook_left), (expanded_bottom, 2.545)],  # Lower Left Shadow
-    "13": [(rulebook_right, expanded_right), (expanded_bottom, 2.545)]  # Lower Right Shadow
+    "10": [(expanded_left, rulebook_left), (strike_zone_middle_y, rulebook_top)],  # Upper Left Shadow
+    "11": [(rulebook_right, expanded_right), (strike_zone_middle_y, rulebook_top)],  # Upper Right Shadow
+    "12": [(expanded_left, rulebook_left), (expanded_bottom, strike_zone_middle_y)],  # Lower Left Shadow
+    "13": [(rulebook_right, expanded_right), (expanded_bottom, strike_zone_middle_y)]  # Lower Right Shadow
 }
 
 # Combine strike zones and shadow zones
