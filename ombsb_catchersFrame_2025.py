@@ -23,30 +23,6 @@ strike_zone_middle_y = (rulebook_bottom + rulebook_top) / 2
 x_splits = np.linspace(rulebook_left, rulebook_right, 4)
 y_splits = np.linspace(rulebook_bottom, rulebook_top, 4)
 
-# Define shadow zones based on the new dimensions
-shadow_zones = {
-    "10": [(shadow_left, rulebook_left), (strike_zone_middle_y, shadow_top)],  # Upper Left Shadow
-    "11": [(rulebook_right, shadow_right), (strike_zone_middle_y, shadow_top)],  # Upper Right Shadow
-    "12": [(shadow_left, rulebook_left), (shadow_bottom, strike_zone_middle_y)],  # Lower Left Shadow
-    "13": [(rulebook_right, shadow_right), (shadow_bottom, strike_zone_middle_y)]  # Lower Right Shadow
-}
-
-# Define pitch type to marker mapping
-pitch_marker_map = {
-    "Fastball": "circle",
-    "Sinker": "circle",
-    "Cutter": "triangle-up",
-    "Slider": "triangle-up",
-    "Curveball": "triangle-up",
-    "Sweeper": "triangle-up",
-    "Splitter": "square",
-    "ChangeUp": "square"
-}
-
-# Function to get marker shape based on pitch type
-def get_marker_shape(pitch_type):
-    return pitch_marker_map.get(pitch_type, "diamond")  # Default to rhombus (diamond) for "Other"
-
 # Load CSVs
 sec_csv_path = "SEC_Pitching_pbp_cleaned_for_catchers.csv"
 fawley_csv_path = "Spring Intrasquads MASTER.csv"
@@ -105,16 +81,14 @@ strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)
 def create_zone_scatter(title, pitch_df):
     fig = go.Figure()
 
-    # Add scatter plot for pitches with different shapes
+    # Add scatter plot for pitches
     for index, row in pitch_df.iterrows():
         color = "green" if row["PitchCall"] == "StrikeCalled" else "red"
-        marker_shape = get_marker_shape(row["TaggedPitchType"])
-
         fig.add_trace(go.Scatter(
             x=[row["PlateLocSide"]],
             y=[row["PlateLocHeight"]],
             mode="markers",
-            marker=dict(symbol=marker_shape, color=color, size=8),
+            marker=dict(color=color, size=8),
             showlegend=False
         ))
 
@@ -127,14 +101,22 @@ def create_zone_scatter(title, pitch_df):
     fig.add_shape(type="rect", x0=shadow_left, x1=shadow_right, y0=shadow_bottom, y1=shadow_top,
                   line=dict(color="blue", width=2, dash="dash"))
 
-    # Add connecting lines to fully split shadow zones
-    fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=shadow_bottom, y1=shadow_top,
-                  line=dict(color="blue", width=2, dash="dash"))  
+    # **Fix: Ensure Horizontal and Vertical Dashed Lines Stop at the Strike Zone Edge**
+    fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=shadow_bottom, y1=rulebook_bottom,
+                  line=dict(color="blue", width=2, dash="dash"))  # Bottom vertical line stops at strike zone
+    fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=rulebook_top, y1=shadow_top,
+                  line=dict(color="blue", width=2, dash="dash"))  # Top vertical line stops at strike zone
 
+    fig.add_shape(type="line", x0=shadow_left, x1=rulebook_left, y0=strike_zone_middle_y, y1=strike_zone_middle_y,
+                  line=dict(color="blue", width=2, dash="dash"))  # Left horizontal stops at strike zone
+    fig.add_shape(type="line", x0=rulebook_right, x1=shadow_right, y0=strike_zone_middle_y, y1=strike_zone_middle_y,
+                  line=dict(color="blue", width=2, dash="dash"))  # Right horizontal stops at strike zone
+
+    # **Ensure Full Enclosure with Horizontal Lines**
     fig.add_shape(type="line", x0=shadow_left, x1=shadow_right, y0=shadow_top, y1=shadow_top,
-                  line=dict(color="blue", width=2, dash="dash"))  
+                  line=dict(color="blue", width=2, dash="dash"))  # Top boundary of shadow zone
     fig.add_shape(type="line", x0=shadow_left, x1=shadow_right, y0=shadow_bottom, y1=shadow_bottom,
-                  line=dict(color="blue", width=2, dash="dash"))  
+                  line=dict(color="blue", width=2, dash="dash"))  # Bottom boundary of shadow zone
 
     # Update layout
     fig.update_layout(
