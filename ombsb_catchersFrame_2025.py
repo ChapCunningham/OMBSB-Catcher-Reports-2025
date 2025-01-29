@@ -3,6 +3,75 @@ import pandas as pd
 import matplotlib.pyplot as plt
 import numpy as np
 
+
+import plotly.graph_objects as go
+import streamlit as st
+
+# Set x and y limits for all plots
+x_limits = [-2, 2]
+y_limits = [0.5, 4.5]
+
+# Function to create a scatter plot with strike zone overlays
+def create_zone_scatter(title, pitch_df, show_all=False, only_strikes=False, shadow_zone=False):
+    fig = go.Figure()
+
+    # Add scatter plot for pitches
+    for index, row in pitch_df.iterrows():
+        color = "green" if row["PitchCall"] == "StrikeCalled" else "red"
+        fig.add_trace(go.Scatter(
+            x=[row["PlateLocSide"]],
+            y=[row["PlateLocHeight"]],
+            mode="markers",
+            marker=dict(color=color, size=8),
+            showlegend=False
+        ))
+
+    # Draw main strike zone (same as before)
+    for i in range(4):
+        fig.add_shape(type="line", x0=x_splits[i], x1=x_splits[i], y0=rulebook_bottom, y1=rulebook_top, line=dict(color="black", width=1))
+        fig.add_shape(type="line", x0=rulebook_left, x1=rulebook_right, y0=y_splits[i], y1=y_splits[i], line=dict(color="black", width=1))
+
+    # Draw shadow zones
+    for ((x_min, x_max), (y_min, y_max)) in shadow_zones.values():
+        fig.add_shape(type="rect", x0=x_min, x1=x_max, y0=y_min, y1=y_max, line=dict(color="blue", width=1, dash="dash"))
+
+    # Update layout
+    fig.update_layout(
+        title=title,
+        xaxis=dict(range=x_limits, title="PlateLocSide"),
+        yaxis=dict(range=y_limits, title="PlateLocHeight"),
+        showlegend=False,
+        width=400, height=400
+    )
+
+    return fig
+
+# Filter data for each panel
+all_pitches_df = filtered_fawley.copy()
+strike_pitches_df = filtered_fawley[filtered_fawley["PitchCall"] == "StrikeCalled"]
+shadow_pitches_df = filtered_fawley[
+    (filtered_fawley["PlateLocSide"] < rulebook_left) | (filtered_fawley["PlateLocSide"] > rulebook_right) |
+    (filtered_fawley["PlateLocHeight"] < rulebook_bottom) | (filtered_fawley["PlateLocHeight"] > rulebook_top)
+]
+
+# Create individual plots
+fig1 = create_zone_scatter("All Pitches (Green = Strike, Red = Ball)", all_pitches_df)
+fig2 = create_zone_scatter("Only StrikeCalled Pitches", strike_pitches_df, only_strikes=True)
+fig3 = create_zone_scatter("Pitches in Shadow Zone", shadow_pitches_df, shadow_zone=True)
+
+# Streamlit layout
+st.write("### Strike Zone Breakdown")
+
+col1, col2 = st.columns(2)
+col3, col4 = st.columns(2)
+
+col1.plotly_chart(fig1, use_container_width=True)
+col2.plotly_chart(fig2, use_container_width=True)
+col3.plotly_chart(fig3, use_container_width=True)
+# Leave col4 empty for now (reserved for future expansion)
+
+
+
 # Define constants for the strike zone
 rulebook_left = -0.83083
 rulebook_right = 0.83083
