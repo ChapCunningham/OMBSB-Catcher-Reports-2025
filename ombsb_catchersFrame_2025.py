@@ -168,4 +168,4 @@ col3, col4 = st.columns(2)
 col1.plotly_chart(fig1, use_container_width=True)
 col2.plotly_chart(fig2, use_container_width=True)
 col3.plotly_chart(fig3, use_container_width=True)
-col4.plotly_chart(fig4, use_container_width=True
+col4.plotly_chart(fig4, use_container_width=True)
