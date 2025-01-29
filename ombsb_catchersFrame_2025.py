@@ -148,6 +148,7 @@ st.pyplot(fig)
 
 
 
+
 # Prepare table data
 table_data = []
 for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
@@ -161,13 +162,17 @@ for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
         (filtered_fawley['PlateLocHeight'] >= y_min) & (filtered_fawley['PlateLocHeight'] < y_max)
     ])
 
+    # Calculate the difference
+    difference = fawley_avg - sec_avg
+
     # Append to table data
-    table_data.append([zone, f"{sec_avg:.1f}%", f"{fawley_avg:.1f}%", num_pitches])
+    table_data.append([zone, f"{sec_avg:.1f}%", f"{fawley_avg:.1f}%", num_pitches, f"{difference:.1f}%"])
 
 # Convert to DataFrame for display
-table_df = pd.DataFrame(table_data, columns=["Zone", "SEC Avg (%)", f"{selected_catcher} Avg (%)", "Pitches Seen"])
+table_df = pd.DataFrame(table_data, columns=["Zone", "SEC Avg (%)", f"{selected_catcher} Avg (%)", "Pitches Seen", "Difference (%)"])
 
 # Display in Streamlit
 st.write("### Zone Comparison Table")
 st.dataframe(table_df, hide_index=True)
+
 
