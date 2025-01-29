@@ -39,8 +39,8 @@ for i in range(3):
 zones.update(shadow_zones)
 
 # Load datasets
-sec_csv_path = "/content/drive/MyDrive/Catching Model OMBSB/SEC_Pitching_pbp.csv"
-fawley_csv_path = "/content/drive/MyDrive/CLASS+ (trained with D1 Data)/Spring Intrasquads MASTER.csv"
+sec_csv_path = "SEC_Pitching_pbp_cleaned_for_catchers.csv"
+fawley_csv_path = "Spring Intrasquads MASTER.csv"
 columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
                   'Catcher', 'PitchCall', 'TaggedPitchType',
                   'PlateLocSide', 'PlateLocHeight', 'Date']
