@@ -109,6 +109,10 @@ ax.plot([expanded_left, expanded_right], [expanded_top, expanded_top], 'b--', li
 ax.plot([expanded_left, expanded_left], [expanded_bottom, expanded_top], 'b--', linewidth=2)
 ax.plot([expanded_right, expanded_right], [expanded_bottom, expanded_top], 'b--', linewidth=2)
 
+ax.plot([expanded_left, rulebook_left], [strike_zone_middle_y, strike_zone_middle_y], 'b--', linewidth=1)
+ax.plot([expanded_right, rulebook_right], [strike_zone_middle_y, strike_zone_middle_y], 'b--', linewidth=1)
+ax.plot([strike_zone_middle_x, strike_zone_middle_x], [expanded_bottom, rulebook_bottom], 'b--', linewidth=1)
+ax.plot([strike_zone_middle_x, strike_zone_middle_x], [rulebook_top, expanded_top], 'b--', linewidth=1)
 # Label strike differences
 for zone, ((x_min, x_max), (y_min, y_max)) in zones.items():
     text_x = (x_min + x_max) / 2
