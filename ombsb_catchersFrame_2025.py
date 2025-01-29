@@ -30,6 +30,65 @@ shadow_zones = {
     "12": [(shadow_left, rulebook_left), (shadow_bottom, strike_zone_middle_y)],  # Lower Left Shadow
     "13": [(rulebook_right, shadow_right), (shadow_bottom, strike_zone_middle_y)]  # Lower Right Shadow
 }
+
+# Define pitch type to marker mapping
+pitch_marker_map = {
+    "Fastball": "circle",
+    "Sinker": "circle",
+    "Cutter": "triangle-up",
+    "Slider": "triangle-up",
+    "Curveball": "triangle-up",
+    "Sweeper": "triangle-up",
+    "Splitter": "square",
+    "ChangeUp": "square"
+}
+
+# Function to get marker shape based on pitch type
+def get_marker_shape(pitch_type):
+    return pitch_marker_map.get(pitch_type, "diamond")  # Default to rhombus (diamond) for "Other"
+
+# Load CSVs
+sec_csv_path = "SEC_Pitching_pbp_cleaned_for_catchers.csv"
+fawley_csv_path = "Spring Intrasquads MASTER.csv"
+
+# Load datasets
+columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
+                  'Catcher', 'PitchCall', 'TaggedPitchType',
+                  'PlateLocSide', 'PlateLocHeight', 'Date']
+df_sec = pd.read_csv(sec_csv_path, usecols=columns_needed)
+df_fawley = pd.read_csv(fawley_csv_path, usecols=columns_needed)
+
+# Filter for relevant PitchCalls
+df_sec = df_sec[df_sec['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
+df_fawley = df_fawley[df_fawley['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
+
+# Streamlit UI
+st.title("Catcher Strike Zone Comparison")
+
+# Catcher selection
+catcher_options = df_fawley['Catcher'].dropna().unique()
+selected_catcher = st.selectbox("Select a Catcher:", catcher_options)
+
+# Date selection
+date_options = pd.to_datetime(df_fawley['Date']).dropna().unique()
+date_range = st.date_input("Select Date Range:", [date_options.min(), date_options.max()])
+
+# Filter data
+filtered_fawley = df_fawley[df_fawley['Catcher'] == selected_catcher]
+filtered_fawley = filtered_fawley[
+    (pd.to_datetime(filtered_fawley['Date']) >= pd.Timestamp(date_range[0])) &
+    (pd.to_datetime(filtered_fawley['Date']) <= pd.Timestamp(date_range[1]))
+]
+
+# Prepare datasets for each plot
+strike_pitches_df = filtered_fawley[filtered_fawley["PitchCall"] == "StrikeCalled"]
+ball_pitches_df = filtered_fawley[filtered_fawley["PitchCall"] == "BallCalled"]
+all_pitches_df = filtered_fawley.copy()
+shadow_pitches_df = filtered_fawley[
+    ((filtered_fawley["PlateLocSide"] < rulebook_left) | (filtered_fawley["PlateLocSide"] > rulebook_right)) |
+    ((filtered_fawley["PlateLocHeight"] < rulebook_bottom) | (filtered_fawley["PlateLocHeight"] > rulebook_top))
+]
+
 # Function to calculate Strike% for a given dataset
 def calculate_strike_percentage(df):
     if len(df) == 0:
@@ -39,18 +98,17 @@ def calculate_strike_percentage(df):
 # Compute Strike% BEFORE using them in titles
 strike_percentage_strike = 100.0  # Since this plot only contains StrikeCalled pitches
 strike_percentage_ball = 0.0  # Since this plot only contains BallCalled pitches
-strike_percentage_all = calculate_strike_percentage(all_pitches_df)  # Now function exists
-strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)  # Now function exists
-
+strike_percentage_all = calculate_strike_percentage(all_pitches_df)
+strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)
 
 # Function to create a scatter plot with the correctly drawn shadow zones
 def create_zone_scatter(title, pitch_df):
     fig = go.Figure()
 
-    # Add scatter plot for pitches
+    # Add scatter plot for pitches with different shapes
     for index, row in pitch_df.iterrows():
         color = "green" if row["PitchCall"] == "StrikeCalled" else "red"
-        marker_shape = pitch_marker_map.get(row["TaggedPitchType"], "diamond")  # Default to rhombus
+        marker_shape = get_marker_shape(row["TaggedPitchType"])
 
         fig.add_trace(go.Scatter(
             x=[row["PlateLocSide"]],
@@ -59,7 +117,6 @@ def create_zone_scatter(title, pitch_df):
             marker=dict(symbol=marker_shape, color=color, size=8),
             showlegend=False
         ))
-
 
     # Draw main strike zone
     for i in range(4):
@@ -70,22 +127,14 @@ def create_zone_scatter(title, pitch_df):
     fig.add_shape(type="rect", x0=shadow_left, x1=shadow_right, y0=shadow_bottom, y1=shadow_top,
                   line=dict(color="blue", width=2, dash="dash"))
 
-    # Add missing horizontal lines at top and bottom to fully enclose shadow zone
+    # Add connecting lines to fully split shadow zones
+    fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=shadow_bottom, y1=shadow_top,
+                  line=dict(color="blue", width=2, dash="dash"))  
+
     fig.add_shape(type="line", x0=shadow_left, x1=shadow_right, y0=shadow_top, y1=shadow_top,
-                  line=dict(color="blue", width=2, dash="dash"))  # Top boundary
+                  line=dict(color="blue", width=2, dash="dash"))  
     fig.add_shape(type="line", x0=shadow_left, x1=shadow_right, y0=shadow_bottom, y1=shadow_bottom,
-                  line=dict(color="blue", width=2, dash="dash"))  # Bottom boundary
-
-    # Add vertical connectors to fully split shadow zones
-    fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=shadow_bottom, y1=rulebook_bottom,
-                  line=dict(color="blue", width=2, dash="dash"))  # Bottom middle connector
-    fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=rulebook_top, y1=shadow_top,
-                  line=dict(color="blue", width=2, dash="dash"))  # Top middle connector
-
-    fig.add_shape(type="line", x0=shadow_left, x1=rulebook_left, y0=strike_zone_middle_y, y1=strike_zone_middle_y,
-                  line=dict(color="blue", width=2, dash="dash"))  # Left middle connector
-    fig.add_shape(type="line", x0=rulebook_right, x1=shadow_right, y0=strike_zone_middle_y, y1=strike_zone_middle_y,
-                  line=dict(color="blue", width=2, dash="dash"))  # Right middle connector
+                  line=dict(color="blue", width=2, dash="dash"))  
 
     # Update layout
     fig.update_layout(
@@ -98,13 +147,11 @@ def create_zone_scatter(title, pitch_df):
 
     return fig
 
-
 # Create individual plots with correct Strike% values in titles
 fig1 = create_zone_scatter(f"StrikeCalled Pitches (Strike%: {strike_percentage_strike:.1f}%)", strike_pitches_df)
 fig2 = create_zone_scatter(f"BallCalled Pitches (Strike%: {strike_percentage_ball:.1f}%)", ball_pitches_df)
 fig3 = create_zone_scatter(f"All Pitches (Strike%: {strike_percentage_all:.1f}%)", all_pitches_df)
 fig4 = create_zone_scatter(f"Shadow Zone Pitches (Strike%: {strike_percentage_shadow:.1f}%)", shadow_pitches_df)
-
 
 # Streamlit layout
 st.write("### Updated Strike Zone Breakdown with Strike%")
