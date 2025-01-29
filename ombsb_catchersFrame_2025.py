@@ -49,7 +49,7 @@ selected_catcher = st.selectbox("Select a Catcher:", catcher_options)
 date_options = pd.to_datetime(df_fawley['Date']).dropna().unique()
 date_range = st.date_input("Select Date Range:", [date_options.min(), date_options.max()])
 
-st.markdown("<br><br>", unsafe_allow_html=True)
+
 
 
 # Filter data
