@@ -81,10 +81,10 @@ strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)
 pitch_marker_map = {
     "Fastball": "circle",
     "Sinker": "circle",
-    "Cutter": "triangle-up",
-    "Slider": "triangle-up",
-    "Curveball": "triangle-up",
-    "Sweeper": "triangle-up",
+    "Cutter": "triangle",
+    "Slider": "triangle",
+    "Curveball": "triangle",
+    "Sweeper": "triangle",
     "Splitter": "square",
     "ChangeUp": "square"
 }
