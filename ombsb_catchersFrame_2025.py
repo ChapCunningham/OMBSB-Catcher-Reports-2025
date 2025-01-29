@@ -234,16 +234,16 @@ def create_zone_scatter(title, pitch_df):
 
     # Add connecting lines to properly separate shadow zones
     fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=rulebook_top, y1=expanded_top, 
-                  line=dict(color="red", width=2))  # Top middle connector
+                  line=dict(color="blue", width=2))  # Top middle connector
 
     fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=expanded_bottom, y1=rulebook_bottom, 
-                  line=dict(color="red", width=2))  # Bottom middle connector
+                  line=dict(color="blue", width=2))  # Bottom middle connector
 
     fig.add_shape(type="line", x0=expanded_left, x1=rulebook_left, y0=strike_zone_middle_y, y1=strike_zone_middle_y, 
-                  line=dict(color="red", width=2))  # Left middle connector
+                  line=dict(color="blue", width=2))  # Left middle connector
 
     fig.add_shape(type="line", x0=rulebook_right, x1=expanded_right, y0=strike_zone_middle_y, y1=strike_zone_middle_y, 
-                  line=dict(color="red", width=2))  # Right middle connector
+                  line=dict(color="blue", width=2))  # Right middle connector
 
     # Update layout
     fig.update_layout(
