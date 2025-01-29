@@ -49,6 +49,9 @@ selected_catcher = st.selectbox("Select a Catcher:", catcher_options)
 date_options = pd.to_datetime(df_fawley['Date']).dropna().unique()
 date_range = st.date_input("Select Date Range:", [date_options.min(), date_options.max()])
 
+# Add vertical space to move everything below the selection box
+st.markdown("<br><br>", unsafe_allow_html=True)
+
 # Filter data
 filtered_fawley = df_fawley[df_fawley['Catcher'] == selected_catcher]
 filtered_fawley = filtered_fawley[
@@ -81,26 +84,23 @@ strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)
 pitch_marker_map = {
     "Fastball": "circle",
     "Sinker": "circle",
-    "Cutter": "triangle",
-    "Slider": "triangle",
-    "Curveball": "triangle",
-    "Sweeper": "triangle",
+    "Cutter": "triangle-up",
+    "Slider": "triangle-up",
+    "Curveball": "triangle-up",
+    "Sweeper": "triangle-up",
     "Splitter": "square",
     "ChangeUp": "square"
 }
 
-# Function to get marker shape based on pitch type
 def get_marker_shape(pitch_type):
     return pitch_marker_map.get(pitch_type, "diamond")  # Default to rhombus (diamond) for "Other"
 
 def create_zone_scatter(title, pitch_df):
     fig = go.Figure()
 
-    # Add scatter plot for pitches with hover tooltips
     for index, row in pitch_df.iterrows():
         color = "green" if row["PitchCall"] == "StrikeCalled" else "red"
         marker_shape = get_marker_shape(row["TaggedPitchType"])
-
         fig.add_trace(go.Scatter(
             x=[row["PlateLocSide"]],
             y=[row["PlateLocHeight"]],
@@ -108,39 +108,12 @@ def create_zone_scatter(title, pitch_df):
             marker=dict(symbol=marker_shape, color=color, size=8),
             showlegend=False,
             hoverinfo="text",
-            text=f"Pitcher: {row['Pitcher']}<br>"
-                 f"Pitch Type: {row['TaggedPitchType']}<br>"
-                 f"Batter: {row['Batter']}<br>"
-                 f"BatterSide: {row['BatterSide']}"
+            text=f"Pitcher: {row['Pitcher']}<br>Pitch Type: {row['TaggedPitchType']}<br>Batter: {row['Batter']}<br>BatterSide: {row['BatterSide']}"
         ))
 
-    # Draw main strike zone
-    for i in range(4):
-        fig.add_shape(type="line", x0=x_splits[i], x1=x_splits[i], y0=rulebook_bottom, y1=rulebook_top, line=dict(color="black", width=1))
-        fig.add_shape(type="line", x0=rulebook_left, x1=rulebook_right, y0=y_splits[i], y1=y_splits[i], line=dict(color="black", width=1))
-
-    # Draw shadow zone outlines (ensuring full enclosure)
     fig.add_shape(type="rect", x0=shadow_left, x1=shadow_right, y0=shadow_bottom, y1=shadow_top,
                   line=dict(color="blue", width=2, dash="dash"))
-
-    # Ensure Horizontal and Vertical Dashed Lines Stop at the Strike Zone Edge
-    fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=shadow_bottom, y1=rulebook_bottom,
-                  line=dict(color="blue", width=2, dash="dash"))  # Bottom vertical line stops at strike zone
-    fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=rulebook_top, y1=shadow_top,
-                  line=dict(color="blue", width=2, dash="dash"))  # Top vertical line stops at strike zone
-
-    fig.add_shape(type="line", x0=shadow_left, x1=rulebook_left, y0=strike_zone_middle_y, y1=strike_zone_middle_y,
-                  line=dict(color="blue", width=2, dash="dash"))  # Left horizontal stops at strike zone
-    fig.add_shape(type="line", x0=rulebook_right, x1=shadow_right, y0=strike_zone_middle_y, y1=strike_zone_middle_y,
-                  line=dict(color="blue", width=2, dash="dash"))  # Right horizontal stops at strike zone
-
-    # Ensure Full Enclosure with Horizontal Lines
-    fig.add_shape(type="line", x0=shadow_left, x1=shadow_right, y0=shadow_top, y1=shadow_top,
-                  line=dict(color="blue", width=2, dash="dash"))  # Top boundary of shadow zone
-    fig.add_shape(type="line", x0=shadow_left, x1=shadow_right, y0=shadow_bottom, y1=shadow_bottom,
-                  line=dict(color="blue", width=2, dash="dash"))  # Bottom boundary of shadow zone
-
-    # Update layout
+    
     fig.update_layout(
         title=title,
         xaxis=dict(range=[-2.5, 2.5], title="PlateLocSide"),
@@ -148,9 +121,7 @@ def create_zone_scatter(title, pitch_df):
         showlegend=False,
         width=400, height=400
     )
-
     return fig
-
 
 # Create individual plots with correct Strike% values in titles
 fig1 = create_zone_scatter(f"StrikeCalled Pitches (Strike%: {strike_percentage_strike:.1f}%)", strike_pitches_df)
@@ -160,7 +131,6 @@ fig4 = create_zone_scatter(f"Shadow Zone Pitches (Strike%: {strike_percentage_sh
 
 # Streamlit layout
 st.write(f"### {selected_catcher} Framing Breakdown:")
-
 
 col1, col2 = st.columns(2)
 col3, col4 = st.columns(2)
