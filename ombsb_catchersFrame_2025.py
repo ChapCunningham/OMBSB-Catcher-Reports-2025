@@ -228,9 +228,7 @@ def create_zone_scatter(title, pitch_df):
                   line=dict(color="blue", width=2, dash="dash"))
 
     # Draw shadow zones
-    for zone, ((x_min, x_max), (y_min, y_max)) in corrected_shadow_zones.items():
-        fig.add_shape(type="rect", x0=x_min, x1=x_max, y0=y_min, y1=y_max,
-                      line=dict(color="blue", width=2, dash="dash"))
+   
 
     # Add connecting lines to properly separate shadow zones
     fig.add_shape(type="line", x0=strike_zone_middle_x, x1=strike_zone_middle_x, y0=rulebook_top, y1=expanded_top, 
