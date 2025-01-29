@@ -111,7 +111,7 @@ def create_zone_scatter(title, pitch_df):
             y=[row["PlateLocHeight"]],
             mode="markers",
             marker=dict(symbol=marker_shape, color=color, size=8),
-            showlegend=False
+            showlegend=False,
             showlegend=False,
             hoverinfo="text",
             text=f"Pitcher: {row['Pitcher']}<br>"
