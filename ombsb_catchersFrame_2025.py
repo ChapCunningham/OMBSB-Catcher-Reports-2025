@@ -56,6 +56,22 @@ filtered_fawley = filtered_fawley[
     (pd.to_datetime(filtered_fawley['Date']) <= pd.Timestamp(date_range[1]))
 ]
 
+# Define pitch categories mapping
+pitch_categories = {
+    "Fast/Sink": ["Fastball", "Sinker"],
+    "Breaking Ball": ["Curveball", "Cutter", "Slider", "Sweeper"],
+    "Change/Split": ["ChangeUp", "Splitter"]
+}
+
+# Dropdown filter for pitch category
+selected_pitch_category = st.selectbox("Select a Pitch Type Category:", options=pitch_categories.keys())
+
+# Filter data based on selected pitch category
+if selected_pitch_category:
+    valid_pitch_types = pitch_categories[selected_pitch_category]
+    filtered_fawley = filtered_fawley[filtered_fawley['TaggedPitchType'].isin(valid_pitch_types)]
+
+
 # Prepare datasets for each plot
 strike_pitches_df = filtered_fawley[filtered_fawley["PitchCall"] == "StrikeCalled"]
 ball_pitches_df = filtered_fawley[filtered_fawley["PitchCall"] == "BallCalled"]
