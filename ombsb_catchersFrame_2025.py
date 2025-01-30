@@ -30,9 +30,13 @@ fawley_csv_path = "Spring Intrasquads MASTER.csv"
 # Load datasets
 columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
                   'Catcher', 'PitchCall', 'TaggedPitchType',
+                  'PlateLocSide', 'PlateLocHeight', 'Date'']
+
+rebs_columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
+                  'Catcher', 'PitchCall', 'TaggedPitchType',
                   'PlateLocSide', 'PlateLocHeight', 'Date','Inning','Balls','Strikes']
 df_sec = pd.read_csv(sec_csv_path, usecols=columns_needed)
-df_fawley = pd.read_csv(fawley_csv_path, usecols=columns_needed)
+df_fawley = pd.read_csv(fawley_csv_path, usecols=rebs_columns_needed)
 
 # Filter for relevant PitchCalls
 df_sec = df_sec[df_sec['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
