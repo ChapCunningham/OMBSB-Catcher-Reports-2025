@@ -127,7 +127,7 @@ def create_zone_scatter(title, pitch_df):
             hoverinfo="text",
             text=f"Inning: {row['Inning']}<br>"
                  f"Balls: {row['Balls']}<br>"
-                 f"Strikes: {row['Strikes]}<br>"
+                 f"Strikes: {row['Strikes']}<br>"
                  f"Pitcher: {row['Pitcher']}<br>"
                  f"Pitch Type: {row['TaggedPitchType']}<br>"
                  f"Batter: {row['Batter']}<br>"
