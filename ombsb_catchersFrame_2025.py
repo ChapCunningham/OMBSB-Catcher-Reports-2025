@@ -58,6 +58,7 @@ filtered_fawley = filtered_fawley[
 
 # Define pitch categories mapping
 pitch_categories = {
+    "All Pitches" : ["Curveball", "Cutter", "Slider", "Sweeper","Fastball", "Sinker","ChangeUp", "Splitter"]
     "Fast/Sink": ["Fastball", "Sinker"],
     "Breaking Ball": ["Curveball", "Cutter", "Slider", "Sweeper"],
     "Change/Split": ["ChangeUp", "Splitter"]
