@@ -30,7 +30,7 @@ fawley_csv_path = "Spring Intrasquads MASTER.csv"
 # Load datasets
 columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
                   'Catcher', 'PitchCall', 'TaggedPitchType',
-                  'PlateLocSide', 'PlateLocHeight', 'Date'']
+                  'PlateLocSide', 'PlateLocHeight', 'Date']
 
 rebs_columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
                   'Catcher', 'PitchCall', 'TaggedPitchType',
