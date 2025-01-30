@@ -30,7 +30,7 @@ fawley_csv_path = "Spring Intrasquads MASTER.csv"
 # Load datasets
 columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
                   'Catcher', 'PitchCall', 'TaggedPitchType',
-                  'PlateLocSide', 'PlateLocHeight', 'Date']
+                  'PlateLocSide', 'PlateLocHeight', 'Date','Inning','Balls','Strikes']
 df_sec = pd.read_csv(sec_csv_path, usecols=columns_needed)
 df_fawley = pd.read_csv(fawley_csv_path, usecols=columns_needed)
 
@@ -125,7 +125,10 @@ def create_zone_scatter(title, pitch_df):
             marker=dict(symbol=marker_shape, color=color, size=8, line=dict(color='black',width = 1.5)),
             showlegend=False,
             hoverinfo="text",
-            text=f"Pitcher: {row['Pitcher']}<br>"
+            text=f"Inning: {row['Inning']}<br>"
+                 f"Balls: {row['Balls']}<br>"
+                 f"Strikes: {row['Strikes]}<br>"
+                 f"Pitcher: {row['Pitcher']}<br>"
                  f"Pitch Type: {row['TaggedPitchType']}<br>"
                  f"Batter: {row['Batter']}<br>"
                  f"BatterSide: {row['BatterSide']}"
