@@ -216,29 +216,28 @@ def calculate_framing_metrics(df):
     ].shape[0]
 
     # 50/50 Pitches: Between rulebook and shadow zone
-    fifty_fifty_pitches = df[
-        (((df['PlateLocSide'] >= shadow_left) & (df['PlateLocSide'] < rulebook_left)) |  
-         ((df['PlateLocSide'] > rulebook_right) & (df['PlateLocSide'] <= shadow_right))) &  
-        (((df['PlateLocHeight'] >= shadow_bottom) & (df['PlateLocHeight'] < rulebook_bottom)) |  
-         ((df['PlateLocHeight'] > rulebook_top) & (df['PlateLocHeight'] <= shadow_top)))
-    ]
-    
-    total_fifty_fifty_pitches = shadow_pitches_df.shape[0]
-    total_fifty_fifty_strikes = fifty_fifty_pitches[fifty_fifty_pitches['PitchCall'] == 'StrikeCalled'].shape[0]
+    # Calculate 50/50 Pitches
+fifty_fifty_pitches = df[
+    (((df['PlateLocSide'] >= shadow_left) & (df['PlateLocSide'] <= shadow_right)) &  
+     ((df['PlateLocHeight'] >= shadow_bottom) & (df['PlateLocHeight'] <= shadow_top))) 
+    & 
+    ~(((df['PlateLocSide'] >= rulebook_left) & (df['PlateLocSide'] <= rulebook_right)) &  
+      ((df['PlateLocHeight'] >= rulebook_bottom) & (df['PlateLocHeight'] <= rulebook_top)))
+]
 
-    # Format as "x / y"
-    fifty_fifty_display = f"{total_fifty_fifty_strikes} / {total_fifty_fifty_pitches}"
+total_fifty_fifty_pitches = fifty_fifty_pitches.shape[0]
+total_fifty_fifty_strikes = fifty_fifty_pitches[fifty_fifty_pitches['PitchCall'] == 'StrikeCalled'].shape[0]
 
-    return [
-        ["Balls Called Strikes", balls_called_strikes],
-        ["Strikes Called Balls", strikes_called_balls],
-        ["50/50 Pitches", fifty_fifty_display]
-    ]
+# Format as "x / y"
+fifty_fifty_display = f"{total_fifty_fifty_strikes} / {total_fifty_fifty_pitches}"
 
-# Calculate framing performance using filtered dataset
-framing_table = calculate_framing_metrics(filtered_fawley)
+# Update table
+framing_table = [
+    ["Balls Called Strikes", balls_called_strikes],
+    ["Strikes Called Balls", strikes_called_balls],
+    ["50/50 Pitches", fifty_fifty_display]
+]
 
-# Display table
 st.write("### Framing Performance")
 st.table(framing_table)
 
