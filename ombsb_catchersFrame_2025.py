@@ -224,7 +224,7 @@ def calculate_framing_metrics(df):
 ]
 
     
-    total_fifty_fifty_pitches = fifty_fifty_pitches.shape[0]
+    total_fifty_fifty_pitches = shadow_pitches_df.shape[0]
     total_fifty_fifty_strikes = fifty_fifty_pitches[fifty_fifty_pitches['PitchCall'] == 'StrikeCalled'].shape[0]
 
     # Format as "x / y"
