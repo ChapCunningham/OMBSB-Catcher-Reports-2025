@@ -220,7 +220,7 @@ col4.plotly_chart(fig4, use_container_width=True)
 
 
 # Streamlit layout
-st.write(f"### {selected_catcher} Framing Breakdown:")
+
 
 
 
