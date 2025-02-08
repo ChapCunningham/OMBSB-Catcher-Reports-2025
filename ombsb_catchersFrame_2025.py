@@ -26,6 +26,7 @@ y_splits = np.linspace(rulebook_bottom, rulebook_top, 4)
 # Load CSVs
 sec_csv_path = "SEC_Pitching_pbp_cleaned_for_catchers.csv"
 fawley_csv_path = "Spring Intrasquads MASTER.csv"
+df = '"Spring Intrasquads MASTER.csv"
 
 # Load datasets
 columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
@@ -37,6 +38,7 @@ rebs_columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
                   'PlateLocSide', 'PlateLocHeight', 'Date','Inning','Balls','Strikes']
 df_sec = pd.read_csv(sec_csv_path, usecols=columns_needed)
 df_fawley = pd.read_csv(fawley_csv_path, usecols=rebs_columns_needed)
+df = pd.read_csv(fawley_csv_path, usecols = rebs_columns_needed)
 
 # Filter for relevant PitchCalls
 df_sec = df_sec[df_sec['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
