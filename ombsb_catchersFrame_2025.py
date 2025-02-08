@@ -122,6 +122,20 @@ strike_percentage_ball = 0.0  # Since this plot only contains BallCalled pitches
 strike_percentage_all = calculate_strike_percentage(all_pitches_df)
 strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)
 
+
+
+pitch_marker_map = {
+    "Fastball": "circle",
+    "Sinker": "circle",
+    "Cutter": "triangle-up",
+    "Slider": "triangle-up",
+    "Curveball": "triangle-up",
+    "Sweeper": "triangle-up",
+    "Splitter": "square",
+    "ChangeUp": "square"
+}
+
+
 # Function to get marker shape based on pitch type
 def get_marker_shape(pitch_type):
     return pitch_marker_map.get(pitch_type, "diamond")  # Default to rhombus (diamond) for "Other"
