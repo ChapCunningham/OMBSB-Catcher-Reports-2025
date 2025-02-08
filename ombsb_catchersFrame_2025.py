@@ -198,46 +198,52 @@ col4.plotly_chart(fig4, use_container_width=True)
 
 
 
-# Function to calculate framing metrics
-# Function to calculate framing metrics based on user selection
 def calculate_framing_metrics(df):
-    # Balls Called Strikes (Pitches outside the rulebook zone but called strikes)
+    """Calculates framing performance metrics for the selected dataset."""
+    
+    # Balls Called Strikes: Pitches OUTSIDE rulebook zone that were called strikes
     balls_called_strikes = df[
-        ((df['PlateLocSide'] < rulebook_left) | (df['PlateLocSide'] > rulebook_right) |
-         (df['PlateLocHeight'] < rulebook_bottom) | (df['PlateLocHeight'] > rulebook_top))
+        (((df['PlateLocSide'] < rulebook_left) | (df['PlateLocSide'] > rulebook_right)) |  
+         ((df['PlateLocHeight'] < rulebook_bottom) | (df['PlateLocHeight'] > rulebook_top))) 
         & (df['PitchCall'] == 'StrikeCalled')
     ].shape[0]
 
-    # Strikes Called Balls (Pitches inside the rulebook zone but called balls)
+    # Strikes Called Balls: Pitches INSIDE rulebook zone that were called balls
     strikes_called_balls = df[
-        ((df['PlateLocSide'] >= rulebook_left) & (df['PlateLocSide'] <= rulebook_right) &
-         (df['PlateLocHeight'] >= rulebook_bottom) & (df['PlateLocHeight'] <= rulebook_top))
-        & (df['PitchCall'] == 'BallCalled')
+        ((df['PlateLocSide'] >= rulebook_left) & (df['PlateLocSide'] <= rulebook_right)) &
+        ((df['PlateLocHeight'] >= rulebook_bottom) & (df['PlateLocHeight'] <= rulebook_top)) &
+        (df['PitchCall'] == 'BallCalled')
     ].shape[0]
 
-    # 50/50 Pitches: Between rulebook and shadow zone
-    # Calculate 50/50 Pitches
+    # 50/50 Pitches: Pitches that are BETWEEN the rulebook zone and the shadow zone
     fifty_fifty_pitches = df[
-    (((df['PlateLocSide'] >= shadow_left) & (df['PlateLocSide'] <= shadow_right)) &  
-     ((df['PlateLocHeight'] >= shadow_bottom) & (df['PlateLocHeight'] <= shadow_top))) 
-    & 
-    ~(((df['PlateLocSide'] >= rulebook_left) & (df['PlateLocSide'] <= rulebook_right)) &  
-      ((df['PlateLocHeight'] >= rulebook_bottom) & (df['PlateLocHeight'] <= rulebook_top)))
-]
+        (((df['PlateLocSide'] >= shadow_left) & (df['PlateLocSide'] <= shadow_right)) &  
+         ((df['PlateLocHeight'] >= shadow_bottom) & (df['PlateLocHeight'] <= shadow_top)))  # Inside shadow zone
+        & 
+        ~(((df['PlateLocSide'] >= rulebook_left) & (df['PlateLocSide'] <= rulebook_right)) &  
+          ((df['PlateLocHeight'] >= rulebook_bottom) & (df['PlateLocHeight'] <= rulebook_top)))  # Outside rulebook zone
+    ]
 
-total_fifty_fifty_pitches = fifty_fifty_pitches.shape[0]
-total_fifty_fifty_strikes = fifty_fifty_pitches[fifty_fifty_pitches['PitchCall'] == 'StrikeCalled'].shape[0]
+    # Total pitches in 50/50 zone
+    total_fifty_fifty_pitches = fifty_fifty_pitches.shape[0]
+    
+    # Pitches in 50/50 zone that were called strikes
+    total_fifty_fifty_strikes = fifty_fifty_pitches[fifty_fifty_pitches['PitchCall'] == 'StrikeCalled'].shape[0]
 
-# Format as "x / y"
-fifty_fifty_display = f"{total_fifty_fifty_strikes} / {total_fifty_fifty_pitches}"
+    # Format as "x / y"
+    fifty_fifty_display = f"{total_fifty_fifty_strikes} / {total_fifty_fifty_pitches}"
 
-# Update table
-framing_table = [
-    ["Balls Called Strikes", balls_called_strikes],
-    ["Strikes Called Balls", strikes_called_balls],
-    ["50/50 Pitches", fifty_fifty_display]
-]
+    # Return table data
+    return [
+        ["Balls Called Strikes", balls_called_strikes],
+        ["Strikes Called Balls", strikes_called_balls],
+        ["50/50 Pitches", fifty_fifty_display]
+    ]
 
+# Compute the framing table dynamically based on user-selected filters
+framing_table = calculate_framing_metrics(filtered_fawley)
+
+# Display in Streamlit
 st.write("### Framing Performance")
 st.table(framing_table)
 
