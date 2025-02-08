@@ -216,12 +216,13 @@ def calculate_framing_metrics(df):
     ].shape[0]
 
     # 50/50 Pitches: Between rulebook and shadow zone
-    fifty_fifty_pitches = df[
-        (((df['PlateLocSide'] >= shadow_left) & (df['PlateLocSide'] < rulebook_left)) |  
-         ((df['PlateLocSide'] > rulebook_right) & (df['PlateLocSide'] <= shadow_right))) &  
-        (((df['PlateLocHeight'] >= shadow_bottom) & (df['PlateLocHeight'] < rulebook_bottom)) |  
-         ((df['PlateLocHeight'] > rulebook_top) & (df['PlateLocHeight'] <= shadow_top)))
-    ]
+    shadow_pitches_df = filtered_fawley[
+    (((filtered_fawley["PlateLocSide"] >= shadow_left) & (filtered_fawley["PlateLocSide"] < rulebook_left)) |  
+     ((filtered_fawley["PlateLocSide"] > rulebook_right) & (filtered_fawley["PlateLocSide"] <= shadow_right))) &  
+    (((filtered_fawley["PlateLocHeight"] >= shadow_bottom) & (filtered_fawley["PlateLocHeight"] < rulebook_bottom)) |  
+     ((filtered_fawley["PlateLocHeight"] > rulebook_top) & (filtered_fawley["PlateLocHeight"] <= shadow_top)))
+]
+
     
     total_fifty_fifty_pitches = fifty_fifty_pitches.shape[0]
     total_fifty_fifty_strikes = fifty_fifty_pitches[fifty_fifty_pitches['PitchCall'] == 'StrikeCalled'].shape[0]
