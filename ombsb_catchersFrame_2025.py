@@ -110,6 +110,12 @@ shadow_pitches_df = filtered_fawley[
     ((filtered_fawley["PlateLocHeight"] < rulebook_bottom) | (filtered_fawley["PlateLocHeight"] > rulebook_top))
 ]
 
+def calculate_strike_percentage(df):
+    if len(df) == 0:
+        return 0.0  # Avoid division by zero
+    return (len(df[df["PitchCall"] == "StrikeCalled"]) / len(df)) * 100
+
+
 # Compute Strike% BEFORE using them in titles
 strike_percentage_strike = 100.0  # Since this plot only contains StrikeCalled pitches
 strike_percentage_ball = 0.0  # Since this plot only contains BallCalled pitches
