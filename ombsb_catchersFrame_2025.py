@@ -217,7 +217,7 @@ def calculate_framing_metrics(df):
 
     # 50/50 Pitches: Between rulebook and shadow zone
     # Calculate 50/50 Pitches
-fifty_fifty_pitches = df[
+    fifty_fifty_pitches = df[
     (((df['PlateLocSide'] >= shadow_left) & (df['PlateLocSide'] <= shadow_right)) &  
      ((df['PlateLocHeight'] >= shadow_bottom) & (df['PlateLocHeight'] <= shadow_top))) 
     & 
