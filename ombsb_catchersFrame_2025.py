@@ -66,6 +66,16 @@ selected_batter_side = st.selectbox("Select Batter Side:", batter_side_options)
 pitcher_throws_options = ["All"] + df_fawley['PitcherThrows'].dropna().unique().tolist()
 selected_pitcher_throws = st.selectbox("Select Pitcher Throws:", pitcher_throws_options)
 
+
+pitch_categories = {
+    "All Pitches" : ["Curveball", "Cutter", "Slider", "Sweeper","Fastball", "Sinker","ChangeUp", "Splitter"],
+    "Fast/Sink": ["Fastball", "Sinker"],
+    "Breaking Ball": ["Curveball", "Cutter", "Slider", "Sweeper"],
+    "Change/Split": ["ChangeUp", "Splitter"]
+}
+
+
+
 # Pitch Type Category filter
 selected_pitch_category = st.selectbox("Select a Pitch Type Category:", options=pitch_categories.keys())
 
