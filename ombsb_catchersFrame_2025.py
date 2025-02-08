@@ -193,3 +193,59 @@ col1.plotly_chart(fig1, use_container_width=True)
 col2.plotly_chart(fig2, use_container_width=True)
 col3.plotly_chart(fig3, use_container_width=True)
 col4.plotly_chart(fig4, use_container_width=True)
+
+
+
+# Function to calculate framing metrics
+def calculate_framing_metrics(df):
+    # Rulebook strike zone boundaries
+    strike_zone_left = -0.83083
+    strike_zone_right = 0.83083
+    strike_zone_bottom = 1.5
+    strike_zone_top = 3.3775
+
+    # Shadow zone limits
+    shadow_left = -0.99750
+    shadow_right = 0.99750
+    shadow_bottom = 1.377
+    shadow_top = 3.5
+
+    # Balls Called Strikes (Pitches outside the rulebook zone but called strikes)
+    balls_called_strikes = df[
+        ((df['PlateLocSide'] < strike_zone_left) | (df['PlateLocSide'] > strike_zone_right) |
+         (df['PlateLocHeight'] < strike_zone_bottom) | (df['PlateLocHeight'] > strike_zone_top))
+        & (df['PitchCall'] == 'StrikeCalled')
+    ].shape[0]
+
+    # Strikes Called Balls (Pitches inside the rulebook zone but called balls)
+    strikes_called_balls = df[
+        ((df['PlateLocSide'] >= strike_zone_left) & (df['PlateLocSide'] <= strike_zone_right) &
+         (df['PlateLocHeight'] >= strike_zone_bottom) & (df['PlateLocHeight'] <= strike_zone_top))
+        & (df['PitchCall'] == 'BallCalled')
+    ].shape[0]
+
+    # 50/50 Pitches (Total pitches in shadow zone & how many were called strikes)
+    shadow_pitches = df[
+        ((df['PlateLocSide'] >= shadow_left) & (df['PlateLocSide'] <= strike_zone_left)) |
+        ((df['PlateLocSide'] >= strike_zone_right) & (df['PlateLocSide'] <= shadow_right)) |
+        ((df['PlateLocHeight'] >= shadow_bottom) & (df['PlateLocHeight'] <= strike_zone_bottom)) |
+        ((df['PlateLocHeight'] >= strike_zone_top) & (df['PlateLocHeight'] <= shadow_top))
+    ]
+    total_shadow_pitches = shadow_pitches.shape[0]
+    total_shadow_strikes = shadow_pitches[shadow_pitches['PitchCall'] == 'StrikeCalled'].shape[0]
+
+    # Format for display (x/y)
+    fifty_fifty_display = f"{total_shadow_strikes} / {total_shadow_pitches}"
+
+    return [
+        ["Balls Called Strikes", balls_called_strikes],
+        ["Strikes Called Balls", strikes_called_balls],
+        ["50/50 Pitches", fifty_fifty_display]
+    ]
+
+# Assuming 'df' is your DataFrame containing today's data
+framing_table = calculate_framing_metrics(df)
+
+# Display in Streamlit
+st.write("### Framing Performance")
+st.table(framing_table)
