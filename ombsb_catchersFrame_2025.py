@@ -45,10 +45,8 @@ df_sec = df_sec[df_sec['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
 df_fawley = df_fawley[df_fawley['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
 
 # Streamlit UI
-st.title("Catcher Strike Zone Comparison")
+st.title("2025 Ole Miss Catcher Reports")
 
-# Streamlit UI
-st.title("Catcher Strike Zone Comparison")
 
 # Catcher selection
 catcher_options = df_fawley['Catcher'].dropna().unique()
