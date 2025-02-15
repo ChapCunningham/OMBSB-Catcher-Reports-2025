@@ -25,8 +25,8 @@ y_splits = np.linspace(rulebook_bottom, rulebook_top, 4)
 
 # Load CSVs
 sec_csv_path = "SEC_Pitching_pbp_cleaned_for_catchers.csv"
-fawley_csv_path = "Spring Intrasquads MASTER.csv"
-df = "Spring Intrasquads MASTER.csv"
+fawley_csv_path = "2025_SEASON.csv"
+df = "2025_SEASON.csv"
 
 # Load datasets
 columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
