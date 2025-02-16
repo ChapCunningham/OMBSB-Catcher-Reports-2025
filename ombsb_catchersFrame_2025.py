@@ -35,7 +35,7 @@ columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
 
 rebs_columns_needed = ['Batter', 'BatterSide', 'Pitcher', 'PitcherThrows',
                   'Catcher', 'PitchCall', 'TaggedPitchType',
-                  'PlateLocSide', 'PlateLocHeight', 'Date','Inning','Balls','Strikes']
+                  'PlateLocSide', 'PlateLocHeight', 'Date','Inning','Balls','Strikes','PitcherTeam']
 df_sec = pd.read_csv(sec_csv_path, usecols=columns_needed)
 df_fawley = pd.read_csv(fawley_csv_path, usecols=rebs_columns_needed)
 df = pd.read_csv(fawley_csv_path, usecols = rebs_columns_needed)
@@ -43,6 +43,7 @@ df = pd.read_csv(fawley_csv_path, usecols = rebs_columns_needed)
 # Filter for relevant PitchCalls
 df_sec = df_sec[df_sec['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
 df_fawley = df_fawley[df_fawley['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
+df_fawley = df_fawley[df_fawley['PitcherTeam'] == 'OLE_REB']
 
 # Streamlit UI
 st.title("2025 Ole Miss Catcher Reports")
