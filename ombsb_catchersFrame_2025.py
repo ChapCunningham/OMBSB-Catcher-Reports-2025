@@ -43,7 +43,7 @@ df = pd.read_csv(fawley_csv_path, usecols = rebs_columns_needed)
 # Filter for relevant PitchCalls
 df_sec = df_sec[df_sec['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
 df_fawley = df_fawley[df_fawley['PitchCall'].isin(['StrikeCalled', 'BallCalled'])]
-# df_fawley = df_fawley[df_fawley['PitcherTeam'] == 'OLE_REB']
+df_fawley = df_fawley[df_fawley['PitcherTeam'] == 'OLE_REB']
 
 # Streamlit UI
 st.title("2025 Ole Miss Catcher Reports")
