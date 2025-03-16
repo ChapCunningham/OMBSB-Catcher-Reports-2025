@@ -48,6 +48,14 @@ df_fawley = df_fawley[df_fawley['PitcherTeam'] == 'OLE_REB']
 # Streamlit UI
 st.title("2025 Ole Miss Catcher Reports")
 
+# Convert Date column to datetime format to handle different formats
+df_fawley['Date'] = pd.to_datetime(df_fawley['Date'], errors='coerce')
+df_sec['Date'] = pd.to_datetime(df_sec['Date'], errors='coerce')
+
+# Drop rows where Date conversion failed (if necessary)
+df_fawley = df_fawley.dropna(subset=['Date'])
+df_sec = df_sec.dropna(subset=['Date'])
+
 
 # Catcher selection
 catcher_options = df_fawley['Catcher'].dropna().unique()
