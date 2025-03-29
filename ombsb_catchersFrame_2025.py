@@ -215,7 +215,7 @@ fig3 = create_zone_scatter(f"All Pitches (Strike%: {strike_percentage_all:.1f}%)
 fig4 = create_zone_scatter(f"Shadow Zone Pitches (Strike%: {strike_percentage_shadow:.1f}%)", shadow_pitches_df)
 
 # Streamlit layout
-st.write(f"### {selected_catcher} Framing Breakdown vs. UF G2:")
+st.write(f"### {selected_catcher} Framing Breakdown:")
 
 col1, col2 = st.columns(2)
 col3, col4 = st.columns(2)
