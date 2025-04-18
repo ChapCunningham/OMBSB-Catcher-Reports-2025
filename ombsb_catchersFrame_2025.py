@@ -208,6 +208,11 @@ def create_zone_scatter(title, pitch_df):
 
     return fig
 
+# Display total pitch count caught by the selected catcher under current filters
+total_pitches = len(all_pitches_df)
+st.markdown(f"**Total Pitches Caught:** {total_pitches}")
+
+
 # Create individual plots with updated filtering
 fig1 = create_zone_scatter(f"StrikeCalled Pitches (Strike%: {strike_percentage_strike:.1f}%)", strike_pitches_df)
 fig2 = create_zone_scatter(f"BallCalled Pitches (Strike%: {strike_percentage_ball:.1f}%)", ball_pitches_df)
