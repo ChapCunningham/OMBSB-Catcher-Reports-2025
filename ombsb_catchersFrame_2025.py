@@ -132,39 +132,51 @@ strike_percentage_shadow = calculate_strike_percentage(shadow_pitches_df)
 
 from scipy.stats import gaussian_kde
 
+from scipy.stats import gaussian_kde
+
 def plot_called_strike_kde(df, title):
-    # Get strike and total pitch locations
+    # Filter down to strikes and all pitches
     strikes = df[df["PitchCall"] == "StrikeCalled"]
     total = df.copy()
 
-    # Extract x/y coords
-    xy_strike = np.vstack([strikes["PlateLocSide"], strikes["PlateLocHeight"]])
-    xy_total = np.vstack([total["PlateLocSide"], total["PlateLocHeight"]])
+    # Extract coordinates and drop NaNs
+    strike_coords = strikes[["PlateLocSide", "PlateLocHeight"]].dropna()
+    total_coords = total[["PlateLocSide", "PlateLocHeight"]].dropna()
 
-    # Perform KDE (skip if not enough data)
-    if xy_total.shape[1] < 20 or xy_strike.shape[1] < 5:
-        st.warning("Not enough pitch data to generate CSR heatmap.")
+    # Validate pitch volume
+    if len(total_coords) < 20 or len(strike_coords) < 5:
+        st.warning("Not enough pitch data to generate a called strike rate map.")
         return go.Figure()
 
+    # Convert to arrays
+    xy_strike = np.vstack([strike_coords["PlateLocSide"], strike_coords["PlateLocHeight"]])
+    xy_total = np.vstack([total_coords["PlateLocSide"], total_coords["PlateLocHeight"]])
+
+    # Validate spatial variance
+    if np.std(xy_total[0]) < 1e-4 or np.std(xy_total[1]) < 1e-4:
+        st.warning("Pitch location data is too uniform to create a contour map.")
+        return go.Figure()
+
+    # KDE smoothing
     kde_strike = gaussian_kde(xy_strike, bw_method=0.2)
     kde_total = gaussian_kde(xy_total, bw_method=0.2)
 
-    # Define grid
+    # Grid setup
     x_grid = np.linspace(-2.0, 2.0, 100)
     y_grid = np.linspace(0.5, 4.5, 100)
     X, Y = np.meshgrid(x_grid, y_grid)
     coords = np.vstack([X.ravel(), Y.ravel()])
 
-    # Evaluate KDE on grid
+    # Evaluate KDEs on grid
     Z_strike = kde_strike(coords).reshape(X.shape)
     Z_total = kde_total(coords).reshape(X.shape)
 
-    # Compute CSR
+    # Compute Called Strike Rate
     with np.errstate(divide='ignore', invalid='ignore'):
         CSR = np.divide(Z_strike, Z_total)
-        CSR[Z_total < 1e-6] = np.nan  # hide areas with no pitch coverage
+        CSR[Z_total < 1e-6] = np.nan  # Mask empty areas
 
-    # Plot
+    # Create heatmap plot
     fig = go.Figure(data=go.Heatmap(
         z=CSR,
         x=x_grid,
@@ -174,12 +186,13 @@ def plot_called_strike_kde(df, title):
         colorbar=dict(title='Called Strike Rate')
     ))
 
-    # Add strike zone and shadow zone
+    # Overlay strike zone and shadow zone
     fig.add_shape(type="rect", x0=rulebook_left, x1=rulebook_right, y0=rulebook_bottom, y1=rulebook_top,
                   line=dict(color="black", width=2))
     fig.add_shape(type="rect", x0=shadow_left, x1=shadow_right, y0=shadow_bottom, y1=shadow_top,
                   line=dict(color="black", width=2, dash="dot"))
 
+    # Layout
     fig.update_layout(
         title=title,
         xaxis=dict(title="PlateLocSide", range=[-2.0, 2.0]),
@@ -350,5 +363,6 @@ st.table(framing_table)
 st.write("### Called Strike Rate Contour Map")
 csr_kde_fig = plot_called_strike_kde(all_pitches_df, f"CSR Contour: {selected_catcher}")
 st.plotly_chart(csr_kde_fig, use_container_width=True)
+
 
 
